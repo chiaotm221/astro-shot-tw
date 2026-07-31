@@ -27,6 +27,20 @@ import {
   isXhsBuild,
   withBasePath,
 } from "./site-path";
+import { UI_COPY } from "./i18n/translations";
+import type { Locale } from "./i18n/types";
+import {
+  currentSiderealAngle,
+  DEG,
+  SIDEREAL_RATE,
+  TAU,
+} from "./simulation/astronomy-time";
+import {
+  DEFAULT_SETTINGS,
+  DEFAULT_VIEW,
+  type Settings,
+  type View,
+} from "./simulation/settings";
 
 type CatalogRow = [
   rightAscension: number,
@@ -57,36 +71,6 @@ type ProjectedCelestial = {
   y: number;
   altitude: number;
   depth: number;
-};
-
-type Settings = {
-  rotationSpeed: number;
-  latitude: number;
-  starExposure: number;
-  twinkle: number;
-  skyBrightness: number;
-  skyHue: number;
-  skySaturation: number;
-  noiseEnabled: boolean;
-  sensorNoise: number;
-  meteorRate: number;
-  meteorSpeed: number;
-  ordinaryMeteorRatio: number;
-  fireballEnergy: number;
-  ignitionTime: number;
-  burstChance: number;
-  burstPosition: number;
-  tailLength: number;
-  afterglow: number;
-  meteorAngle: number;
-  directionSpread: number;
-  paused: boolean;
-};
-
-type View = {
-  azimuth: number;
-  altitude: number;
-  fov: number;
 };
 
 type MeteorVariant = "weak" | "strong" | null;
@@ -146,40 +130,6 @@ type GalacticPanoramaRenderer = {
     intensity: number,
   ) => boolean;
   dispose: () => void;
-};
-
-const TAU = Math.PI * 2;
-const DEG = Math.PI / 180;
-const SIDEREAL_RATE = TAU / 86164.0905;
-
-const DEFAULT_SETTINGS: Settings = {
-  rotationSpeed: 120,
-  latitude: 1.35,
-  starExposure: 3.2,
-  twinkle: 0.76,
-  skyBrightness: 0.67,
-  skyHue: 218,
-  skySaturation: 0.4,
-  noiseEnabled: true,
-  sensorNoise: 0.28,
-  meteorRate: 7,
-  meteorSpeed: 1,
-  ordinaryMeteorRatio: 74,
-  fireballEnergy: 0.72,
-  ignitionTime: 0.12,
-  burstChance: 0.68,
-  burstPosition: 0.52,
-  tailLength: 1,
-  afterglow: 0.55,
-  meteorAngle: 11,
-  directionSpread: 118,
-  paused: false,
-};
-
-const DEFAULT_VIEW: View = {
-  azimuth: 202 * DEG,
-  altitude: 28 * DEG,
-  fov: 59 * DEG,
 };
 
 function clamp(value: number, minimum: number, maximum: number) {
@@ -251,15 +201,6 @@ function colorFromBv(bv: number | null): [number, number, number] {
     Math.round(clamp(green, 0, 1) * 255),
     Math.round(clamp(blue, 0, 1) * 255),
   ];
-}
-
-function currentSiderealAngle(longitudeDegrees = 103.82) {
-  const julianDate = Date.now() / 86400000 + 2440587.5;
-  const degrees =
-    280.46061837 +
-    360.98564736629 * (julianDate - 2451545) +
-    longitudeDegrees;
-  return ((degrees % 360) + 360) % 360 * DEG;
 }
 
 function createGalacticPanoramaRenderer(): GalacticPanoramaRenderer | null {
@@ -1615,97 +1556,6 @@ function MeteorRatioControl({
     </label>
   );
 }
-
-type Locale = "zh-CN" | "en";
-
-const UI_COPY = {
-  "zh-CN": {
-    pageTitle: "AstroShot · 真实星空与流星模拟器",
-    canvasLabel: "可拖拽旋转视角的真实星空模拟画布",
-    openPanel: "打开参数面板",
-    closePanel: "关闭参数面板",
-    panelAria: "星空模拟参数",
-    title: "AstroShot",
-    languageLabel: "切换为英文",
-    githubLabel: "在 GitHub 上查看项目",
-    environment: "观测环境",
-    rotation: "地球自转",
-    latitude: "观测纬度",
-    skyBrightness: "天空亮度",
-    skyHue: "天空色相",
-    skySaturation: "天空饱和度",
-    sensorNoise: "感光噪点",
-    sensorNoiseDescription: "模拟高感光度传感器颗粒",
-    noiseStrength: "噪点强度",
-    starAppearance: "恒星表现",
-    starExposure: "星光曝光",
-    twinkle: "大气闪烁",
-    meteorSystem: "流星系统",
-    meteorRate: "出现频率",
-    meteorSpeed: "速度基准",
-    ordinaryMeteor: "普通流星",
-    fireball: "火流星",
-    meteorRatio: "普通流星与火流星比例",
-    fireballEnergy: "火流星能级",
-    ignitionTime: "起燃时间",
-    burstChance: "爆亮概率",
-    burstPosition: "爆亮位置",
-    tailLength: "尾迹长度",
-    afterglow: "残影寿命",
-    meteorAngle: "流星倾角",
-    directionSpread: "方向散布",
-    triggerOrdinary: "触发普通流星",
-    triggerWeak: "触发弱火流星",
-    triggerStrong: "触发强火流星",
-    pause: "暂停时间",
-    resume: "继续模拟",
-    stars: "颗恒星",
-    loading: "加载中",
-  },
-  en: {
-    pageTitle: "AstroShot · Real Sky & Meteor Simulator",
-    canvasLabel: "Draggable real-sky simulation canvas",
-    openPanel: "Open settings",
-    closePanel: "Close settings",
-    panelAria: "Sky simulation settings",
-    title: "AstroShot",
-    languageLabel: "Switch to Chinese",
-    githubLabel: "View project on GitHub",
-    environment: "Observation",
-    rotation: "Earth rotation",
-    latitude: "Observer latitude",
-    skyBrightness: "Sky brightness",
-    skyHue: "Sky hue",
-    skySaturation: "Sky saturation",
-    sensorNoise: "Sensor noise",
-    sensorNoiseDescription: "Simulate high-ISO sensor grain",
-    noiseStrength: "Noise intensity",
-    starAppearance: "Star Appearance",
-    starExposure: "Star exposure",
-    twinkle: "Atmospheric twinkle",
-    meteorSystem: "Meteor System",
-    meteorRate: "Appearance rate",
-    meteorSpeed: "Base speed",
-    ordinaryMeteor: "Ordinary",
-    fireball: "Fireball",
-    meteorRatio: "Ordinary meteor and fireball ratio",
-    fireballEnergy: "Fireball energy",
-    ignitionTime: "Ignition time",
-    burstChance: "Flare probability",
-    burstPosition: "Flare position",
-    tailLength: "Trail length",
-    afterglow: "Afterglow lifetime",
-    meteorAngle: "Meteor angle",
-    directionSpread: "Direction spread",
-    triggerOrdinary: "Trigger ordinary meteor",
-    triggerWeak: "Trigger weak fireball",
-    triggerStrong: "Trigger strong fireball",
-    pause: "Pause time",
-    resume: "Resume simulation",
-    stars: "stars",
-    loading: "Loading",
-  },
-} as const;
 
 function SettingsPanel({
   settings,
