@@ -45,6 +45,11 @@ import {
 } from "../app/simulation/time-events.ts";
 import { OBSERVING_SITE_DETAILS } from "../app/simulation/observing-site-details.ts";
 import { OBSERVING_SITES } from "../app/simulation/observing-sites.ts";
+import {
+  observingConditionScore,
+  parseOpenMeteoWeather,
+  weatherApiUrl,
+} from "../app/simulation/weather.ts";
 
 test("object search normalizes aliases and localized names", () => {
   const index = createObjectSearchIndex(CELESTIAL_OBJECTS);
@@ -94,6 +99,18 @@ test("bundled Taiwan observing sites have complete static planning details", () 
     assert.ok(details.horizon["zh-TW"].length > 0);
     assert.ok(site.elevationMeters >= 0);
   }
+});
+
+test("weather responses normalize into a bounded observing score", () => {
+  const weather = parseOpenMeteoWeather({
+    current: { time: "2026-08-01T20:00", temperature_2m: 22, relative_humidity_2m: 70, precipitation: 0, cloud_cover: 12, wind_speed_10m: 7 },
+    hourly: { time: ["2026-08-01T20:00"], precipitation_probability: [5], visibility: [24000] },
+  }, 1234);
+  assert.equal(weather.fetchedAt, 1234);
+  assert.ok(observingConditionScore(weather) >= 75);
+  const url = weatherApiUrl(23.5, 121);
+  assert.match(url, /api\.open-meteo\.com/);
+  assert.match(url, /cloud_cover/);
 });
 
 async function render() {

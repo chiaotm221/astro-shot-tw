@@ -18,6 +18,7 @@ import { ObjectInfoCard } from "./components/ObjectInfoCard";
 import { MoonConditions } from "./components/MoonConditions";
 import { MilkyWayPlanner } from "./components/MilkyWayPlanner";
 import { TaiwanObservingMap } from "./components/TaiwanObservingMap";
+import { WeatherConditions } from "./components/WeatherConditions";
 import { TonightRecommendations } from "./components/TonightRecommendations";
 import { LiquidGlassMenu } from "./LiquidGlassMenu";
 import {
@@ -1809,6 +1810,16 @@ function SettingsPanel({
           </button>
         </div>
       </div>
+
+      <details className="section">
+        <summary className="section-toggle">
+          <span>{locale === "zh-TW" ? "天氣與觀星條件" : "Weather Conditions"}</span>
+          <span className="section-chevron" aria-hidden="true" />
+        </summary>
+        <div className="section-content">
+          <WeatherConditions latitude={settings.latitude} longitude={selectedSite.longitude} locale={locale} />
+        </div>
+      </details>
 
       <details className="section">
         <summary className="section-toggle">
