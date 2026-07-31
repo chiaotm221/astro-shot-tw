@@ -75,6 +75,10 @@ npm test
 - [Contributing](CONTRIBUTING.md): local development and review process.
 - [Changelog](CHANGELOG.md): completed release changes.
 - [Release Plans](docs/PLAN/): detailed scope and acceptance criteria by version.
+- [AI Sky Compositing Prompt](docs/PROMPTS/CHATGPT_SKY_COMPOSITING.md): reusable
+  prompt for combining a real foreground photo with an aligned simulated sky.
+- [Photo Capture Checklist](docs/USER_GUIDES/PHOTO_CAPTURE_CHECKLIST.md): user
+  guidance for preserving the metadata needed for future sky alignment.
 
 ## Data and Acknowledgments
 

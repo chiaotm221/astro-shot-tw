@@ -1,3 +1,20 @@
+# V2.0
+
+## Added
+
+- Tonight's Sky recommendations for bright stars and deep-sky objects
+- Visibility status, direction, altitude, rise delay, and equipment guidance
+- View navigation from a recommendation to its sky position
+
+## Changed
+
+- Exposed the renderer's sidereal angle through a stable ref for low-frequency
+  recommendation calculations
+
+## Fixed
+
+- Recommendations do not use unverified fixed positions for planets or the Moon
+
 # V1.3
 
 ## Added

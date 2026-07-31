@@ -617,6 +617,101 @@ button {
   line-height: 1.45;
 }
 
+.tonight-recommendations {
+  display: grid;
+  gap: 12px;
+  margin: 0 -10px;
+  padding: 8px 15px 12px;
+}
+
+.tonight-recommendations header h3,
+.tonight-recommendations header p {
+  margin: 0;
+}
+
+.tonight-recommendations header h3 {
+  color: var(--glass-foreground);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.tonight-recommendations header p {
+  margin-top: 3px;
+  color: var(--glass-muted);
+  font-size: 10px;
+}
+
+.tonight-object-list {
+  display: grid;
+  gap: 7px;
+}
+
+.tonight-object {
+  display: grid;
+  gap: 5px;
+  width: 100%;
+  padding: 10px 11px;
+  border: 1px solid rgba(245, 247, 255, 0.1);
+  border-radius: 13px;
+  background: rgba(245, 247, 255, 0.055);
+  color: var(--glass-foreground);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease;
+}
+
+.tonight-object:hover {
+  border-color: rgba(245, 247, 255, 0.2);
+  background: rgba(245, 247, 255, 0.1);
+}
+
+.tonight-object:focus-visible {
+  outline: 2px solid rgba(245, 247, 255, 0.7);
+  outline-offset: 2px;
+}
+
+.tonight-object-heading,
+.tonight-object-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.tonight-object-heading strong {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.tonight-object-heading span,
+.tonight-object-meta {
+  color: var(--glass-muted);
+  font-size: 9px;
+}
+
+.tonight-object-meta > span {
+  flex: none;
+}
+
+.tonight-object-brightness,
+.tonight-approximation-note {
+  color: var(--glass-muted-foreground);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.tonight-object-brightness {
+  display: block;
+  margin-top: 3px;
+  text-align: left;
+}
+
+.tonight-approximation-note {
+  margin: 10px 2px 0;
+}
+
 .control {
   display: grid;
   gap: 6px;

@@ -13,6 +13,11 @@ import {
   isValidLongitude,
 } from "../app/simulation/observing-sites.ts";
 import {
+  calculateVisibility,
+  horizontalCoordinates,
+  recommendTonight,
+} from "../app/simulation/visibility.ts";
+import {
   firstStarAtOrBelowMagnitude,
   projectCelestial,
   setEquatorialCoordinates,
@@ -84,6 +89,7 @@ test("static export renders the AstroShot shell and controls", async () => {
   assert.doesNotMatch(html, /github-link|github\.com\/CatsJuice\/astro-shot/);
   assert.match(html, /Add custom location/);
   assert.match(html, /Use current location/);
+  assert.match(html, /Tonight(?:'|&#x27;)s Sky/);
   assert.doesNotMatch(html, />LIVE</);
   assert.doesNotMatch(html, /夜航|NIGHTFALL|拖拽观察天穹| FPS/);
   assert.doesNotMatch(html, /Your site is taking shape|Building your site/);
@@ -335,6 +341,94 @@ test("custom observing coordinates enforce geographic bounds", () => {
   assert.equal(isValidLongitude(Number.POSITIVE_INFINITY), false);
 });
 
+test("visibility coordinates place a meridian object at the expected altitude", () => {
+  const latitudeDegrees = 25;
+  const declinationDegrees = 10;
+  const siderealAngle = 1.2;
+  const coordinates = horizontalCoordinates(
+    {
+      rightAscension: siderealAngle,
+      declination: (declinationDegrees * Math.PI) / 180,
+    },
+    latitudeDegrees,
+    siderealAngle,
+  );
+  assert.ok(Math.abs(coordinates.altitudeDegrees - 75) < 1e-8);
+  assert.ok(Math.abs(coordinates.azimuthDegrees - 180) < 1e-8);
+});
+
+function testObject(id, rightAscension, declination = 0, magnitude = 1) {
+  return {
+    id,
+    name: { "zh-TW": id, en: id },
+    kind: "star",
+    rightAscension,
+    declination,
+    magnitude,
+  };
+}
+
+test("visibility status respects horizon boundaries and tonight window", () => {
+  const radians = Math.PI / 180;
+  const sidereal = 0;
+
+  assert.equal(
+    calculateVisibility(testObject("overhead", sidereal), 0, sidereal).status,
+    "visible",
+  );
+  assert.equal(
+    calculateVisibility(testObject("low", 85 * radians), 0, sidereal).status,
+    "low",
+  );
+
+  const later = calculateVisibility(
+    testObject("later", 100 * radians),
+    0,
+    sidereal,
+  );
+  assert.equal(later.status, "later");
+  assert.ok(later.risesInHours > 0 && later.risesInHours <= 12);
+
+  const neverRises = calculateVisibility(
+    testObject("never-rises", 0, 89 * radians),
+    -90,
+    sidereal,
+  );
+  assert.equal(neverRises.status, "not-tonight");
+  assert.equal(neverRises.risesInHours, null);
+});
+
+test("fixed sky inputs preserve east-west direction and recommendation filtering", () => {
+  const radians = Math.PI / 180;
+  const east = horizontalCoordinates(
+    testObject("east", 60 * radians),
+    0,
+    0,
+  );
+  const west = horizontalCoordinates(
+    testObject("west", -60 * radians),
+    0,
+    0,
+  );
+  assert.ok(Math.abs(east.altitudeDegrees - 30) < 1e-8);
+  assert.ok(Math.abs(east.azimuthDegrees - 90) < 1e-8);
+  assert.ok(Math.abs(west.altitudeDegrees - 30) < 1e-8);
+  assert.ok(Math.abs(west.azimuthDegrees - 270) < 1e-8);
+
+  const recommendations = recommendTonight(
+    [
+      testObject("bright", 0, 0, -1),
+      testObject("dim", 0, 0, 4),
+      testObject("hidden", 0, 89 * radians, 1),
+    ],
+    -90,
+    0,
+    5,
+  );
+  assert.ok(recommendations.every((entry) => entry.status !== "not-tonight"));
+  assert.ok(!recommendations.some((entry) => entry.object.id === "hidden"));
+});
+
 test("XHS build compiles with Chinese as its default locale", async () => {
   const config = await readFile(
     new URL("../vite.xhs.config.ts", import.meta.url),
@@ -349,6 +443,7 @@ test("XHS build compiles with Chinese as its default locale", async () => {
 test("ships a real catalog and the temporal rendering systems", async () => {
   const [
     source,
+    settingsSource,
     glassSource,
     cameraSource,
     css,
@@ -357,6 +452,7 @@ test("ships a real catalog and the temporal rendering systems", async () => {
     milkyWayPanorama,
   ] = await Promise.all([
     readFile(new URL("../app/SkySimulator.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/simulation/settings.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/LiquidGlassMenu.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/CameraSystem.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -402,7 +498,7 @@ test("ships a real catalog and the temporal rendering systems", async () => {
   assert.match(source, /variant === "strong"/);
   assert.match(source, /settings\.directionSpread/);
   assert.match(source, /settings\.meteorSpeed/);
-  assert.match(source, /ordinaryMeteorRatio: 74/);
+  assert.match(settingsSource, /ordinaryMeteorRatio: 74/);
   assert.match(source, /1 - settingsNow\.ordinaryMeteorRatio \/ 100/);
   assert.doesNotMatch(source, /ordinaryWeight|fireballWeight/);
   assert.match(source, /const ordinaryEnergy =/);
@@ -423,10 +519,10 @@ test("ships a real catalog and the temporal rendering systems", async () => {
   );
   assert.doesNotMatch(source, /meteor\.x \+= meteor\.vx/);
   assert.match(source, /meteor\.strength \* 1\.25/);
-  assert.match(source, /starExposure: 3\.2/);
-  assert.match(source, /skyBrightness: 0\.67/);
-  assert.match(source, /skyHue: 218/);
-  assert.match(source, /skySaturation: 0\.4/);
+  assert.match(settingsSource, /starExposure: 3\.2/);
+  assert.match(settingsSource, /skyBrightness: 0\.67/);
+  assert.match(settingsSource, /skyHue: 218/);
+  assert.match(settingsSource, /skySaturation: 0\.4/);
   assert.match(
     source,
     /label=\{copy\.skyHue\}[\s\S]*?min=\{0\}[\s\S]*?max=\{360\}/,
@@ -450,8 +546,9 @@ test("ships a real catalog and the temporal rendering systems", async () => {
   assert.match(source, /globalCompositeOperation = "lighter"/);
   assert.match(source, /useState\(false\)/);
   assert.match(source, /<LiquidGlassMenu/);
+  assert.match(source, /<TonightRecommendations/);
+  assert.match(source, /sky:focus-object/);
   assert.match(source, /locale === "zh-TW"/);
-  assert.match(source, /AstroShot · Real Sky &amp; Meteor Simulator|AstroShot · Real Sky & Meteor Simulator/);
   assert.match(source, /window\.localStorage\.setItem\("sky-locale"/);
   assert.match(source, /<details className="section">/);
   assert.match(source, /<summary className="section-toggle">/);

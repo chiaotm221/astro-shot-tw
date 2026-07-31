@@ -43,6 +43,9 @@ Status: implemented, pending full local runtime verification.
 
 ### V2.0 — Tonight's Sky
 
+Status: Phase 1 implemented, pending full verification. Moon and planets remain
+deferred until validated ephemeris calculations are available.
+
 - Recommend visible objects for the selected place and time.
 - Explain direction, altitude, brightness, and viewing equipment in plain
   language.
@@ -82,8 +85,14 @@ Status: implemented, pending full local runtime verification.
 
 ### V5.x
 
+- Photo selection and aligned sky or star-trail simulation using available
+  EXIF plus user-confirmed GPS, approximate elevation, direction, orientation,
+  focal length, and manual correction.
 - Camera sensor, focal length, orientation, and field-of-view simulation.
 - Exportable observing and photography plans.
+- Optional external AI compositing workflow without coupling the simulator to a
+  specific provider.
+- No physical-camera control or live device-sensor integration.
 
 ### V6.x
 

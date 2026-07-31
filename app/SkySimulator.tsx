@@ -7,10 +7,12 @@ import {
   useState,
   type Dispatch,
   type CSSProperties,
+  type RefObject,
   type SetStateAction,
 } from "react";
 import { CameraSystem } from "./CameraSystem";
 import { ObservingSiteSelector } from "./components/ObservingSiteSelector";
+import { TonightRecommendations } from "./components/TonightRecommendations";
 import { LiquidGlassMenu } from "./LiquidGlassMenu";
 import {
   firstStarAtOrBelowMagnitude,
@@ -1578,6 +1580,7 @@ function SettingsPanel({
   onObservingSiteChange,
   sites,
   onSaveCustomSite,
+  siderealRef,
   catalogCount,
   catalogReady,
   locale,
@@ -1589,6 +1592,7 @@ function SettingsPanel({
   onObservingSiteChange: (siteId: string) => void;
   sites: readonly ObservingSite[];
   onSaveCustomSite: (name: string, latitude: number, longitude: number) => void;
+  siderealRef: RefObject<number>;
   catalogCount: number;
   catalogReady: boolean;
   locale: Locale;
@@ -1709,6 +1713,20 @@ function SettingsPanel({
             step={0.01}
             display={`${Math.round(settings.sensorNoise * 100)}%`}
             onChange={(value) => update("sensorNoise", value)}
+          />
+        </div>
+      </details>
+
+      <details className="section">
+        <summary className="section-toggle">
+          <span>{locale === "zh-TW" ? "今晚的星空" : "Tonight's Sky"}</span>
+          <span className="section-chevron" aria-hidden="true" />
+        </summary>
+        <div className="section-content">
+          <TonightRecommendations
+            latitude={settings.latitude}
+            siderealRef={siderealRef}
+            locale={locale}
           />
         </div>
       </details>
@@ -1892,6 +1910,9 @@ export function SkySimulator() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const settingsRef = useRef(INITIAL_SETTINGS);
   const observingLongitudeRef = useRef(DEFAULT_OBSERVING_SITE.longitude);
+  const siderealRef = useRef(
+    currentSiderealAngle(DEFAULT_OBSERVING_SITE.longitude),
+  );
   const interactionLockedRef = useRef(false);
   const [settings, setSettings] = useState(INITIAL_SETTINGS);
   const [selectedSite, setSelectedSite] = useState(DEFAULT_OBSERVING_SITE);
@@ -2181,7 +2202,39 @@ export function SkySimulator() {
             : null;
       spawn("fireball", performance.now() / 1000, true, variant);
     };
+
+    const focusCelestialObject = (event: Event) => {
+      const detail = (event as CustomEvent<{
+        rightAscension: number;
+        declination: number;
+      }>).detail;
+      if (
+        !detail ||
+        !Number.isFinite(detail.rightAscension) ||
+        !Number.isFinite(detail.declination)
+      ) {
+        return;
+      }
+      const latitude = settingsRef.current.latitude * DEG;
+      const cosDeclination = Math.cos(detail.declination);
+      const equatorialX = cosDeclination * Math.cos(detail.rightAscension);
+      const equatorialY = cosDeclination * Math.sin(detail.rightAscension);
+      const equatorialZ = Math.sin(detail.declination);
+      const sinSidereal = Math.sin(sidereal);
+      const cosSidereal = Math.cos(sidereal);
+      const hourCosine =
+        equatorialX * cosSidereal + equatorialY * sinSidereal;
+      const localX =
+        equatorialY * cosSidereal - equatorialX * sinSidereal;
+      const localY =
+        equatorialZ * Math.cos(latitude) - hourCosine * Math.sin(latitude);
+      const localZ =
+        equatorialZ * Math.sin(latitude) + hourCosine * Math.cos(latitude);
+      view.azimuth = Math.atan2(localX, localY);
+      view.altitude = Math.asin(clamp(localZ, -1, 1));
+    };
     window.addEventListener("sky:meteor", summonMeteor);
+    window.addEventListener("sky:focus-object", focusCelestialObject);
 
     const pointerDown = (event: PointerEvent) => {
       if (interactionLockedRef.current) return;
@@ -2734,6 +2787,7 @@ export function SkySimulator() {
         observerLongitude = nextObserverLongitude;
       }
       sidereal = (sidereal + SIDEREAL_RATE * settingsNow.rotationSpeed * delta) % TAU;
+      siderealRef.current = sidereal;
 
       const basis = basisForView(view);
       const focal = height / (2 * Math.tan(view.fov * 0.5));
@@ -2765,6 +2819,7 @@ export function SkySimulator() {
       resizeObserver.disconnect();
       galacticPanorama?.dispose();
       window.removeEventListener("sky:meteor", summonMeteor);
+      window.removeEventListener("sky:focus-object", focusCelestialObject);
       canvas.removeEventListener("pointerdown", pointerDown);
       canvas.removeEventListener("pointermove", pointerMove);
       canvas.removeEventListener("pointerup", pointerUp);
@@ -2810,6 +2865,7 @@ export function SkySimulator() {
             onObservingSiteChange={selectObservingSite}
             sites={[...OBSERVING_SITES, ...customSites]}
             onSaveCustomSite={saveCustomSite}
+            siderealRef={siderealRef}
             catalogCount={catalogCount}
             catalogReady={catalogReady}
             locale={locale}

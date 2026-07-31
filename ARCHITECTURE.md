@@ -53,6 +53,11 @@ camera capture
 React state must not be updated every frame. UI-visible settings use state and
 are mirrored into refs for the renderer.
 
+The current camera system captures the simulated canvas; it does not access the
+device's physical camera. Local photo selection, EXIF parsing, and manual
+alignment are deferred to the V5.0 plan. Live camera, GPS, compass, and IMU
+integration are intentionally out of scope.
+
 ## Observing-Site Data Flow
 
 ```text
