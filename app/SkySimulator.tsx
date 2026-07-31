@@ -21,6 +21,7 @@ import { TaiwanObservingMap } from "./components/TaiwanObservingMap";
 import { WeatherConditions } from "./components/WeatherConditions";
 import { LightPollutionPanel } from "./components/LightPollutionPanel";
 import { PhotographyFrame, PhotographyPlanner } from "./components/PhotographyPlanner";
+import { PhotoImport } from "./components/PhotoImport";
 import { TonightRecommendations } from "./components/TonightRecommendations";
 import { LiquidGlassMenu } from "./LiquidGlassMenu";
 import {
@@ -1817,6 +1818,16 @@ function SettingsPanel({
           </button>
         </div>
       </div>
+
+      <details className="section">
+        <summary className="section-toggle">
+          <span>{locale === "zh-TW" ? "照片匯入與 EXIF" : "Photo Import & EXIF"}</span>
+          <span className="section-chevron" aria-hidden="true" />
+        </summary>
+        <div className="section-content">
+          <PhotoImport locale={locale} />
+        </div>
+      </details>
 
       <details className="section">
         <summary className="section-toggle">

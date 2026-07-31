@@ -113,6 +113,9 @@ estimate ranges and source limitations, pending full browser verification.
 Status: V5.0 Phase 1 camera field-of-view and composition planning implemented,
 pending full browser and visual verification.
 
+V5.1 Phase 1 local photo import, JPEG EXIF extraction, and privacy messaging
+implemented, pending fixture and browser verification.
+
 - Photo selection and aligned sky or star-trail simulation using available
   EXIF plus user-confirmed GPS, approximate elevation, direction, orientation,
   focal length, and manual correction.
@@ -121,6 +124,13 @@ pending full browser and visual verification.
 - Optional external AI compositing workflow without coupling the simulator to a
   specific provider.
 - No physical-camera control or live device-sensor integration.
+
+Planned sequence:
+
+- V5.1 — Local photo import, EXIF extraction, and privacy notice.
+- V5.2 — GPS/time/direction confirmation and manual sky alignment.
+- V5.3 — Star, Milky Way, and star-trail preview over the imported photo.
+- V5.4 — Photography-plan export and separately consented external AI workflow.
 
 ### V6.x
 

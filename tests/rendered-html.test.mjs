@@ -59,6 +59,7 @@ import {
   isValidPhotographyPlan,
   photographyFieldOfView,
 } from "../app/simulation/photography.ts";
+import { hasExifData, readJpegExif } from "../app/simulation/exif.ts";
 
 test("object search normalizes aliases and localized names", () => {
   const index = createObjectSearchIndex(CELESTIAL_OBJECTS);
@@ -139,6 +140,28 @@ test("camera geometry narrows with focal length and swaps on portrait orientatio
   assert.ok(telephoto.horizontalDegrees < wide.horizontalDegrees);
   assert.ok(Math.abs(portrait.horizontalDegrees - wide.verticalDegrees) < 1e-9);
   assert.ok(isValidPhotographyPlan(DEFAULT_PHOTOGRAPHY_PLAN));
+});
+
+test("local JPEG EXIF parser reads a bounded little-endian orientation tag", () => {
+  const bytes = new Uint8Array(40);
+  const view = new DataView(bytes.buffer);
+  view.setUint16(0, 0xffd8);
+  view.setUint16(2, 0xffe1);
+  view.setUint16(4, 34);
+  bytes.set([0x45, 0x78, 0x69, 0x66, 0, 0], 6);
+  bytes.set([0x49, 0x49], 12);
+  view.setUint16(14, 42, true);
+  view.setUint32(16, 8, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 0x0112, true);
+  view.setUint16(24, 3, true);
+  view.setUint32(26, 1, true);
+  view.setUint16(30, 6, true);
+  view.setUint32(34, 0, true);
+  view.setUint16(38, 0xffd9);
+  const exif = readJpegExif(bytes.buffer);
+  assert.equal(exif.orientation, 6);
+  assert.ok(hasExifData(exif));
 });
 
 async function render() {
