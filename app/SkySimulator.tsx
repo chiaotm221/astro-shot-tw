@@ -19,6 +19,7 @@ import { MoonConditions } from "./components/MoonConditions";
 import { MilkyWayPlanner } from "./components/MilkyWayPlanner";
 import { TaiwanObservingMap } from "./components/TaiwanObservingMap";
 import { WeatherConditions } from "./components/WeatherConditions";
+import { LightPollutionPanel } from "./components/LightPollutionPanel";
 import { TonightRecommendations } from "./components/TonightRecommendations";
 import { LiquidGlassMenu } from "./LiquidGlassMenu";
 import {
@@ -1810,6 +1811,16 @@ function SettingsPanel({
           </button>
         </div>
       </div>
+
+      <details className="section">
+        <summary className="section-toggle">
+          <span>{locale === "zh-TW" ? "光害與夜空品質" : "Light Pollution"}</span>
+          <span className="section-chevron" aria-hidden="true" />
+        </summary>
+        <div className="section-content">
+          <LightPollutionPanel sites={sites} selectedSite={selectedSite} onChange={onObservingSiteChange} simulationTimeRef={simulationTimeRef} locale={locale} />
+        </div>
+      </details>
 
       <details className="section">
         <summary className="section-toggle">

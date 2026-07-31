@@ -50,6 +50,10 @@ import {
   parseOpenMeteoWeather,
   weatherApiUrl,
 } from "../app/simulation/weather.ts";
+import {
+  combinedDarknessScore,
+  LIGHT_POLLUTION_PROFILES,
+} from "../app/simulation/light-pollution.ts";
 
 test("object search normalizes aliases and localized names", () => {
   const index = createObjectSearchIndex(CELESTIAL_OBJECTS);
@@ -111,6 +115,16 @@ test("weather responses normalize into a bounded observing score", () => {
   const url = weatherApiUrl(23.5, 121);
   assert.match(url, /api\.open-meteo\.com/);
   assert.match(url, /cloud_cover/);
+});
+
+test("light-pollution profiles cover bundled sites and moonlight cannot improve them", () => {
+  for (const site of OBSERVING_SITES) {
+    const profile = LIGHT_POLLUTION_PROFILES[site.id];
+    assert.ok(profile, `missing light-pollution profile for ${site.id}`);
+    assert.ok(profile.baseDarknessScore >= 0 && profile.baseDarknessScore <= 100);
+    assert.ok(combinedDarknessScore(profile, 1, 60) <= profile.baseDarknessScore);
+    assert.ok(profile.estimatedVisibleStars[1] >= profile.estimatedVisibleStars[0]);
+  }
 });
 
 async function render() {

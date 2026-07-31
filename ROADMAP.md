@@ -101,6 +101,9 @@ browser verification and sourced expansion.
 V4.1 Phase 1 weather conditions implemented with failure-tolerant cached
 Open-Meteo forecast data, pending full browser verification.
 
+V4.2 Phase 1 historical light-pollution comparison implemented with explicit
+estimate ranges and source limitations, pending full browser verification.
+
 - Taiwan observing-site map and static site information.
 - Weather, cloud cover, and observing-condition summaries.
 - Light-pollution data with explicit source dates and limitations.
