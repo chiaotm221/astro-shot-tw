@@ -54,10 +54,10 @@ function compassDirection(azimuthDegrees: number, locale: Locale) {
 
 function equipmentFor(entry: ObjectVisibility, locale: Locale) {
   const copy = COPY[locale];
-  if (entry.object.kind === "deep-sky" && entry.object.magnitude > 2.5) {
+  if (entry.object.kind === "deep-sky" && (entry.object.magnitude ?? 99) > 2.5) {
     return copy.telescope;
   }
-  if (entry.object.kind === "deep-sky" || entry.object.magnitude > 2.5) {
+  if (entry.object.kind === "deep-sky" || (entry.object.magnitude ?? 99) > 2.5) {
     return copy.binoculars;
   }
   return copy.nakedEye;
@@ -133,7 +133,7 @@ export function TonightRecommendations({
                 <span>{equipmentFor(entry, locale)}</span>
               </span>
               <span className="tonight-object-brightness">
-                {copy.brightness} {entry.object.magnitude.toFixed(1)}
+                {copy.brightness} {entry.object.magnitude?.toFixed(1) ?? "—"}
               </span>
             </button>
           );

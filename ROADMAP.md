@@ -53,6 +53,9 @@ deferred until validated ephemeris calculations are available.
 
 ### V2.1 — Object Search
 
+Status: Phase 1 implemented, pending full browser verification. Dynamic planet
+positions remain deferred until validated ephemeris calculations are available.
+
 - Search Chinese and English names.
 - Support stars, planets, constellations, and deep-sky objects.
 - Smoothly guide the view to a result.

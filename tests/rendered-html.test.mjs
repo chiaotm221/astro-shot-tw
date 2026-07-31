@@ -23,6 +23,20 @@ import {
   setEquatorialCoordinates,
   setSensorNoiseCrop,
 } from "../app/rendering-helpers.mjs";
+import {
+  createObjectSearchIndex,
+  normalizeSearchTerm,
+  searchCelestialObjects,
+} from "../app/simulation/object-search.ts";
+import { CELESTIAL_OBJECTS } from "../app/simulation/celestial-objects.ts";
+
+test("object search normalizes aliases and localized names", () => {
+  const index = createObjectSearchIndex(CELESTIAL_OBJECTS);
+  assert.equal(normalizeSearchTerm("Orion-Nebula"), "orionnebula");
+  assert.equal(searchCelestialObjects("天狼", 8, index)[0]?.id, "sirius");
+  assert.equal(searchCelestialObjects("m 42", 8, index)[0]?.id, "orion-nebula");
+  assert.equal(searchCelestialObjects("BIG-DIPPER", 8, index)[0]?.id, "ursa-major");
+});
 
 async function render() {
   return readFile(new URL("../out/index.html", import.meta.url), "utf8");

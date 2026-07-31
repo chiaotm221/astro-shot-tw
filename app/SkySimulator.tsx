@@ -12,6 +12,7 @@ import {
 } from "react";
 import { CameraSystem } from "./CameraSystem";
 import { ObservingSiteSelector } from "./components/ObservingSiteSelector";
+import { ObjectSearch } from "./components/ObjectSearch";
 import { TonightRecommendations } from "./components/TonightRecommendations";
 import { LiquidGlassMenu } from "./LiquidGlassMenu";
 import {
@@ -1573,6 +1574,106 @@ function MeteorRatioControl({
   );
 }
 
+function TimeSimulationMenu({
+  settings,
+  setSettings,
+  open,
+  onOpenChange,
+  locale,
+  disabled,
+}: {
+  settings: Settings;
+  setSettings: Dispatch<SetStateAction<Settings>>;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  locale: Locale;
+  disabled: boolean;
+}) {
+  const copy = locale === "zh-TW"
+    ? {
+        title: "時間模擬",
+        open: "開啟時間模擬選單",
+        close: "關閉時間模擬選單",
+        speed: "地球模擬倍數",
+        running: "模擬進行中",
+        stopped: "模擬已停止",
+        start: "開始模擬",
+        stop: "停止模擬",
+      }
+    : {
+        title: "Time Simulation",
+        open: "Open time simulation menu",
+        close: "Close time simulation menu",
+        speed: "Earth simulation speed",
+        running: "Simulation running",
+        stopped: "Simulation stopped",
+        start: "Start simulation",
+        stop: "Stop simulation",
+      };
+
+  const update = <Key extends keyof Settings>(key: Key, value: Settings[Key]) =>
+    setSettings((current) => ({ ...current, [key]: value }));
+
+  return (
+    <div className={`time-simulation-menu${open ? " open" : ""}`}>
+      {open && (
+        <section className="time-simulation-panel" aria-label={copy.title}>
+          <header>
+            <div>
+              <strong>{copy.title}</strong>
+              <small>{settings.paused ? copy.stopped : copy.running}</small>
+            </div>
+            <span className={`simulation-status${settings.paused ? " stopped" : ""}`} aria-hidden="true" />
+          </header>
+          <RangeControl
+            label={copy.speed}
+            value={settings.rotationSpeed}
+            min={1}
+            max={720}
+            step={1}
+            display={`${settings.rotationSpeed}×`}
+            onChange={(value) => update("rotationSpeed", value)}
+          />
+          <div className="simulation-speed-presets" aria-label={copy.speed}>
+            {[1, 60, 360, 720].map((speed) => (
+              <button
+                key={speed}
+                type="button"
+                className={settings.rotationSpeed === speed ? "active" : ""}
+                onClick={() => update("rotationSpeed", speed)}
+                aria-pressed={settings.rotationSpeed === speed}
+              >
+                {speed}×
+              </button>
+            ))}
+          </div>
+          <button
+            className="simulation-toggle"
+            type="button"
+            onClick={() => update("paused", !settings.paused)}
+          >
+            {settings.paused ? copy.start : copy.stop}
+          </button>
+        </section>
+      )}
+      <button
+        className="time-simulation-trigger"
+        type="button"
+        disabled={disabled}
+        aria-expanded={open}
+        aria-label={open ? copy.close : copy.open}
+        onClick={() => onOpenChange(!open)}
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="8.5" />
+          <path d="M12 7.5v5l3.2 2" />
+        </svg>
+        <span>{settings.paused ? "Ⅱ" : `${settings.rotationSpeed}×`}</span>
+      </button>
+    </div>
+  );
+}
+
 function SettingsPanel({
   settings,
   setSettings,
@@ -1632,6 +1733,16 @@ function SettingsPanel({
 
       <details className="section">
         <summary className="section-toggle">
+          <span>{locale === "zh-TW" ? "搜尋星體" : "Object Search"}</span>
+          <span className="section-chevron" aria-hidden="true" />
+        </summary>
+        <div className="section-content">
+          <ObjectSearch locale={locale} />
+        </div>
+      </details>
+
+      <details className="section">
+        <summary className="section-toggle">
           <span>{copy.environment}</span>
           <span className="section-chevron" aria-hidden="true" />
         </summary>
@@ -1642,15 +1753,6 @@ function SettingsPanel({
             onChange={onObservingSiteChange}
             onSaveCustom={onSaveCustomSite}
             locale={locale}
-          />
-          <RangeControl
-            label={copy.rotation}
-            value={settings.rotationSpeed}
-            min={0}
-            max={720}
-            step={1}
-            display={`${settings.rotationSpeed}×`}
-            onChange={(value) => update("rotationSpeed", value)}
           />
           <RangeControl
             label={copy.latitude}
@@ -1884,13 +1986,6 @@ function SettingsPanel({
             {copy.triggerStrong}
           </button>
         </div>
-          <button
-            className="pause-button"
-            type="button"
-            onClick={() => update("paused", !settings.paused)}
-          >
-            {settings.paused ? copy.resume : copy.pause}
-          </button>
         </div>
       </details>
 
@@ -1918,6 +2013,7 @@ export function SkySimulator() {
   const [selectedSite, setSelectedSite] = useState(DEFAULT_OBSERVING_SITE);
   const [customSites, setCustomSites] = useState<readonly ObservingSite[]>([]);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [timeMenuOpen, setTimeMenuOpen] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
   const [captureLocked, setCaptureLocked] = useState(false);
   const [locale, setLocale] = useState<Locale>(defaultLocale);
@@ -2041,6 +2137,7 @@ export function SkySimulator() {
     interactionLockedRef.current = locked;
     setCaptureLocked(locked);
     if (locked) setPanelOpen(false);
+    if (locked) setTimeMenuOpen(false);
   }, []);
 
   useEffect(() => {
@@ -2069,6 +2166,14 @@ export function SkySimulator() {
     let pinchStartDistance = 0;
     let pinchStartFieldOfView = DEFAULT_VIEW.fov;
     const view = { ...DEFAULT_VIEW };
+    let focusAnimation: {
+      startedAt: number;
+      fromAzimuth: number;
+      fromAltitude: number;
+      toAzimuth: number;
+      toAltitude: number;
+      label: string;
+    } | null = null;
     const meteors: Meteor[] = [];
     const projectedStar: ProjectedCelestial = {
       x: 0,
@@ -2205,6 +2310,7 @@ export function SkySimulator() {
 
     const focusCelestialObject = (event: Event) => {
       const detail = (event as CustomEvent<{
+        label?: string;
         rightAscension: number;
         declination: number;
       }>).detail;
@@ -2230,8 +2336,17 @@ export function SkySimulator() {
         equatorialZ * Math.cos(latitude) - hourCosine * Math.sin(latitude);
       const localZ =
         equatorialZ * Math.sin(latitude) + hourCosine * Math.cos(latitude);
-      view.azimuth = Math.atan2(localX, localY);
-      view.altitude = Math.asin(clamp(localZ, -1, 1));
+      let toAzimuth = Math.atan2(localX, localY);
+      while (toAzimuth - view.azimuth > Math.PI) toAzimuth -= TAU;
+      while (toAzimuth - view.azimuth < -Math.PI) toAzimuth += TAU;
+      focusAnimation = {
+        startedAt: performance.now() / 1000,
+        fromAzimuth: view.azimuth,
+        fromAltitude: view.altitude,
+        toAzimuth,
+        toAltitude: Math.asin(clamp(localZ, -1, 1)),
+        label: detail.label ?? "",
+      };
     };
     window.addEventListener("sky:meteor", summonMeteor);
     window.addEventListener("sky:focus-object", focusCelestialObject);
@@ -2789,6 +2904,13 @@ export function SkySimulator() {
       sidereal = (sidereal + SIDEREAL_RATE * settingsNow.rotationSpeed * delta) % TAU;
       siderealRef.current = sidereal;
 
+      if (focusAnimation) {
+        const progress = clamp((now - focusAnimation.startedAt) / 0.72, 0, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        view.azimuth = focusAnimation.fromAzimuth + (focusAnimation.toAzimuth - focusAnimation.fromAzimuth) * eased;
+        view.altitude = focusAnimation.fromAltitude + (focusAnimation.toAltitude - focusAnimation.fromAltitude) * eased;
+      }
+
       const basis = basisForView(view);
       const focal = height / (2 * Math.tan(view.fov * 0.5));
       drawBackground(basis, focal, settingsNow);
@@ -2807,6 +2929,25 @@ export function SkySimulator() {
         }
       }
       drawHorizon(focal);
+      if (focusAnimation && now - focusAnimation.startedAt < 2.4) {
+        const markerAge = now - focusAnimation.startedAt;
+        const alpha = Math.min(1, markerAge * 4) * Math.min(1, (2.4 - markerAge) * 2);
+        context.save();
+        context.strokeStyle = `rgba(226, 238, 255, ${alpha * 0.9})`;
+        context.fillStyle = `rgba(240, 246, 255, ${alpha})`;
+        context.lineWidth = 1.4;
+        context.beginPath();
+        context.arc(width * 0.5, height * 0.5, 18 + Math.sin(markerAge * 5) * 2, 0, TAU);
+        context.stroke();
+        if (focusAnimation.label) {
+          context.font = "500 12px system-ui, sans-serif";
+          context.textAlign = "center";
+          context.fillText(focusAnimation.label, width * 0.5, height * 0.5 + 37);
+        }
+        context.restore();
+      } else if (focusAnimation && now - focusAnimation.startedAt >= 2.4) {
+        focusAnimation = null;
+      }
       drawSensorNoise(settingsNow);
 
       animationFrame = requestAnimationFrame(render);
@@ -2848,10 +2989,25 @@ export function SkySimulator() {
         locale={locale}
       />
 
+      <TimeSimulationMenu
+        settings={settings}
+        setSettings={setSettings}
+        open={timeMenuOpen}
+        onOpenChange={(open) => {
+          setTimeMenuOpen(open);
+          if (open) setPanelOpen(false);
+        }}
+        locale={locale}
+        disabled={captureLocked}
+      />
+
       <LiquidGlassMenu
         sourceCanvasRef={canvasRef}
         open={panelOpen}
-        onOpenChange={setPanelOpen}
+        onOpenChange={(open) => {
+          setPanelOpen(open);
+          if (open) setTimeMenuOpen(false);
+        }}
         openLabel={copy.openPanel}
         closeLabel={copy.closePanel}
         disabled={captureLocked}

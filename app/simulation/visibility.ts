@@ -92,7 +92,7 @@ export function calculateVisibility(
     score:
       statusWeight +
       Math.max(-10, Math.min(70, coordinates.altitudeDegrees)) -
-      object.magnitude * 4,
+      (object.magnitude ?? 8) * 4,
   };
 }
 

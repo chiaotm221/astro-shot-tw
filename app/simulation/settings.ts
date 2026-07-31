@@ -31,7 +31,7 @@ export type View = {
 };
 
 export const DEFAULT_SETTINGS: Settings = {
-  rotationSpeed: 120,
+  rotationSpeed: 1,
   latitude: 1.35,
   starExposure: 3.2,
   twinkle: 0.76,

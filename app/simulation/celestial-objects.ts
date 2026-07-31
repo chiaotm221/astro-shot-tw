@@ -1,79 +1,34 @@
 import { DEG } from "./astronomy-time.ts";
 
+export type CelestialObjectKind = "star" | "planet" | "constellation" | "deep-sky";
+
 export type CelestialObject = {
   id: string;
   name: { "zh-TW": string; en: string };
-  kind: "star" | "deep-sky";
+  aliases?: readonly string[];
+  kind: CelestialObjectKind;
   rightAscension: number;
   declination: number;
-  magnitude: number;
+  magnitude: number | null;
 };
 
 const equatorial = (degrees: number) => degrees * DEG;
 
-export const RECOMMENDATION_OBJECTS: readonly CelestialObject[] = [
-  {
-    id: "sirius",
-    name: { "zh-TW": "天狼星", en: "Sirius" },
-    kind: "star",
-    rightAscension: equatorial(101.2872),
-    declination: equatorial(-16.7161),
-    magnitude: -1.46,
-  },
-  {
-    id: "vega",
-    name: { "zh-TW": "織女星", en: "Vega" },
-    kind: "star",
-    rightAscension: equatorial(279.2347),
-    declination: equatorial(38.7837),
-    magnitude: 0.03,
-  },
-  {
-    id: "altair",
-    name: { "zh-TW": "牛郎星", en: "Altair" },
-    kind: "star",
-    rightAscension: equatorial(297.6958),
-    declination: equatorial(8.8683),
-    magnitude: 0.77,
-  },
-  {
-    id: "antares",
-    name: { "zh-TW": "心宿二", en: "Antares" },
-    kind: "star",
-    rightAscension: equatorial(247.3519),
-    declination: equatorial(-26.432),
-    magnitude: 1.06,
-  },
-  {
-    id: "betelgeuse",
-    name: { "zh-TW": "參宿四", en: "Betelgeuse" },
-    kind: "star",
-    rightAscension: equatorial(88.7929),
-    declination: equatorial(7.4071),
-    magnitude: 0.5,
-  },
-  {
-    id: "polaris",
-    name: { "zh-TW": "北極星", en: "Polaris" },
-    kind: "star",
-    rightAscension: equatorial(37.9546),
-    declination: equatorial(89.2641),
-    magnitude: 1.98,
-  },
-  {
-    id: "pleiades",
-    name: { "zh-TW": "昴宿星團", en: "Pleiades" },
-    kind: "deep-sky",
-    rightAscension: equatorial(56.75),
-    declination: equatorial(24.1167),
-    magnitude: 1.6,
-  },
-  {
-    id: "orion-nebula",
-    name: { "zh-TW": "獵戶座大星雲", en: "Orion Nebula" },
-    kind: "deep-sky",
-    rightAscension: equatorial(83.8221),
-    declination: equatorial(-5.3911),
-    magnitude: 4,
-  },
-] as const;
+export const CELESTIAL_OBJECTS: readonly CelestialObject[] = [
+  { id: "sirius", name: { "zh-TW": "天狼星", en: "Sirius" }, aliases: ["Alpha Canis Majoris"], kind: "star", rightAscension: equatorial(101.2872), declination: equatorial(-16.7161), magnitude: -1.46 },
+  { id: "vega", name: { "zh-TW": "織女星", en: "Vega" }, aliases: ["Alpha Lyrae"], kind: "star", rightAscension: equatorial(279.2347), declination: equatorial(38.7837), magnitude: 0.03 },
+  { id: "altair", name: { "zh-TW": "牛郎星", en: "Altair" }, aliases: ["河鼓二", "Alpha Aquilae"], kind: "star", rightAscension: equatorial(297.6958), declination: equatorial(8.8683), magnitude: 0.77 },
+  { id: "antares", name: { "zh-TW": "心宿二", en: "Antares" }, aliases: ["Alpha Scorpii"], kind: "star", rightAscension: equatorial(247.3519), declination: equatorial(-26.432), magnitude: 1.06 },
+  { id: "betelgeuse", name: { "zh-TW": "參宿四", en: "Betelgeuse" }, aliases: ["Alpha Orionis"], kind: "star", rightAscension: equatorial(88.7929), declination: equatorial(7.4071), magnitude: 0.5 },
+  { id: "polaris", name: { "zh-TW": "北極星", en: "Polaris" }, aliases: ["Alpha Ursae Minoris"], kind: "star", rightAscension: equatorial(37.9546), declination: equatorial(89.2641), magnitude: 1.98 },
+  { id: "pleiades", name: { "zh-TW": "昴宿星團", en: "Pleiades" }, aliases: ["M45", "Seven Sisters"], kind: "deep-sky", rightAscension: equatorial(56.75), declination: equatorial(24.1167), magnitude: 1.6 },
+  { id: "orion-nebula", name: { "zh-TW": "獵戶座大星雲", en: "Orion Nebula" }, aliases: ["M42"], kind: "deep-sky", rightAscension: equatorial(83.8221), declination: equatorial(-5.3911), magnitude: 4 },
+  { id: "andromeda-galaxy", name: { "zh-TW": "仙女座星系", en: "Andromeda Galaxy" }, aliases: ["M31"], kind: "deep-sky", rightAscension: equatorial(10.6847), declination: equatorial(41.2692), magnitude: 3.44 },
+  { id: "orion", name: { "zh-TW": "獵戶座", en: "Orion" }, kind: "constellation", rightAscension: equatorial(83), declination: equatorial(3), magnitude: null },
+  { id: "ursa-major", name: { "zh-TW": "大熊座", en: "Ursa Major" }, aliases: ["Big Dipper", "北斗七星"], kind: "constellation", rightAscension: equatorial(165), declination: equatorial(56), magnitude: null },
+  { id: "scorpius", name: { "zh-TW": "天蠍座", en: "Scorpius" }, aliases: ["Scorpio"], kind: "constellation", rightAscension: equatorial(253), declination: equatorial(-27), magnitude: null },
+];
+
+export const RECOMMENDATION_OBJECTS = CELESTIAL_OBJECTS.filter(
+  (object) => object.kind === "star" || object.kind === "deep-sky",
+);
