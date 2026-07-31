@@ -119,6 +119,9 @@ implemented, pending fixture and browser verification.
 V5.2 Phase 1 EXIF confirmation and manual photo-to-sky alignment implemented,
 pending full browser and real-photo verification.
 
+V5.3 Phase 1 local star, Milky Way, and simulation-time star-trail overlays
+implemented, pending full browser, visual, and performance verification.
+
 - Photo selection and aligned sky or star-trail simulation using available
   EXIF plus user-confirmed GPS, approximate elevation, direction, orientation,
   focal length, and manual correction.

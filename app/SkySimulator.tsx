@@ -23,6 +23,7 @@ import { LightPollutionPanel } from "./components/LightPollutionPanel";
 import { PhotographyFrame, PhotographyPlanner } from "./components/PhotographyPlanner";
 import { PhotoImport, type ImportedPhoto } from "./components/PhotoImport";
 import { AlignedPhotoOverlay, PhotoAlignmentControls } from "./components/PhotoAlignment";
+import { PhotoSkyOverlay, PhotoSkyPreviewControls } from "./components/PhotoSkyPreview";
 import { TonightRecommendations } from "./components/TonightRecommendations";
 import { LiquidGlassMenu } from "./LiquidGlassMenu";
 import {
@@ -67,6 +68,7 @@ import {
 import { CONSTELLATION_FIGURES } from "./simulation/constellations";
 import { DEFAULT_PHOTOGRAPHY_PLAN, type PhotographyPlan } from "./simulation/photography";
 import { alignmentFromExif, DEFAULT_PHOTO_ALIGNMENT, type PhotoAlignment } from "./simulation/photo-alignment";
+import { DEFAULT_PHOTO_PREVIEW, type PhotoPreviewSettings } from "./simulation/photo-preview";
 import {
   localDateInputValue,
   solarEventsForLocalDay,
@@ -1779,6 +1781,8 @@ function SettingsPanel({
   onApplyPhotoAlignment,
   onImportPhoto,
   onClearPhoto,
+  photoPreview,
+  setPhotoPreview,
 }: {
   settings: Settings;
   setSettings: Dispatch<SetStateAction<Settings>>;
@@ -1800,6 +1804,8 @@ function SettingsPanel({
   onApplyPhotoAlignment: (alignment: PhotoAlignment) => void;
   onImportPhoto: (photo: ImportedPhoto) => void;
   onClearPhoto: () => void;
+  photoPreview: PhotoPreviewSettings;
+  setPhotoPreview: Dispatch<SetStateAction<PhotoPreviewSettings>>;
 }) {
   const copy = UI_COPY[locale];
   const update = useCallback(
@@ -1832,6 +1838,16 @@ function SettingsPanel({
           </button>
         </div>
       </div>
+
+      <details className="section">
+        <summary className="section-toggle">
+          <span>{locale === "zh-TW" ? "照片星空與星軌預覽" : "Photo Sky & Trail Preview"}</span>
+          <span className="section-chevron" aria-hidden="true" />
+        </summary>
+        <div className="section-content">
+          <PhotoSkyPreviewControls settings={photoPreview} setSettings={setPhotoPreview} hasPhoto={importedPhoto !== null} locale={locale} />
+        </div>
+      </details>
 
       <details className="section">
         <summary className="section-toggle">
@@ -2229,6 +2245,7 @@ export function SkySimulator() {
   const [photographyPlan, setPhotographyPlan] = useState(DEFAULT_PHOTOGRAPHY_PLAN);
   const [importedPhoto, setImportedPhoto] = useState<ImportedPhoto | null>(null);
   const [photoAlignment, setPhotoAlignment] = useState(DEFAULT_PHOTO_ALIGNMENT);
+  const [photoPreview, setPhotoPreview] = useState(DEFAULT_PHOTO_PREVIEW);
   const copy = UI_COPY[locale];
 
   const applyObservingSite = useCallback((site: ObservingSite) => {
@@ -3298,6 +3315,7 @@ export function SkySimulator() {
       <div className="vignette" />
 
       {importedPhoto && <AlignedPhotoOverlay photo={importedPhoto} alignment={photoAlignment} />}
+      {importedPhoto && photoPreview.enabled && <PhotoSkyOverlay sourceCanvasRef={canvasRef} simulationTimeRef={simulationTimeRef} settings={photoPreview} />}
 
       <CameraSystem
         sourceCanvasRef={canvasRef}
@@ -3369,6 +3387,8 @@ export function SkySimulator() {
             onApplyPhotoAlignment={applyPhotoAlignment}
             onImportPhoto={importPhoto}
             onClearPhoto={() => setImportedPhoto(null)}
+            photoPreview={photoPreview}
+            setPhotoPreview={setPhotoPreview}
           />
         </div>
       </LiquidGlassMenu>

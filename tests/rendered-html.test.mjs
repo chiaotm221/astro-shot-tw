@@ -64,6 +64,7 @@ import {
   alignmentFromExif,
   exifFieldMatches,
 } from "../app/simulation/photo-alignment.ts";
+import { trailSampleIntervalSeconds } from "../app/simulation/photo-preview.ts";
 
 test("object search normalizes aliases and localized names", () => {
   const index = createObjectSearchIndex(CELESTIAL_OBJECTS);
@@ -174,6 +175,12 @@ test("photo alignment preserves EXIF provenance after manual correction", () => 
   assert.equal(alignment.capturedAt, "2026-07-15T21:30:00");
   assert.ok(exifFieldMatches(alignment, exif, "latitude"));
   assert.ok(!exifFieldMatches({ ...alignment, latitude: 23.6 }, exif, "latitude"));
+});
+
+test("star-trail sampling stays bounded as preview duration changes", () => {
+  assert.equal(trailSampleIntervalSeconds(5), 2.5);
+  assert.equal(trailSampleIntervalSeconds(30), 15);
+  assert.ok(trailSampleIntervalSeconds(120) > trailSampleIntervalSeconds(30));
 });
 
 async function render() {
