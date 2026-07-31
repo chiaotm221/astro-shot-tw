@@ -338,7 +338,7 @@ button {
 
 .simulation-speed-presets {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 6px;
   margin-top: 3px;
 }
@@ -353,6 +353,54 @@ button {
   font: inherit;
   font-size: 11px;
   cursor: pointer;
+}
+
+.object-info-card {
+  position: fixed;
+  left: 50%;
+  bottom: max(22px, var(--app-safe-area-inset-bottom));
+  z-index: 38;
+  width: min(390px, calc(100vw - 44px));
+  padding: 18px;
+  border: 1px solid rgba(245, 247, 255, 0.15);
+  border-radius: 22px;
+  background: rgba(13, 18, 32, 0.76);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  color: var(--glass-foreground);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  transform: translateX(-50%);
+  backdrop-filter: blur(24px) saturate(1.2);
+  animation: object-info-enter 200ms ease-out both;
+}
+
+.object-info-card header { display: flex; justify-content: space-between; gap: 16px; }
+.object-info-card header > div { display: grid; gap: 2px; }
+.object-info-card header span { color: var(--glass-muted); font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; }
+.object-info-card h2 { margin: 2px 0 0; font-size: 20px; font-weight: 600; }
+.object-info-card header p { margin: 0; color: var(--glass-muted); font-size: 11px; }
+.object-info-card header button { width: 32px; height: 32px; border: 0; border-radius: 50%; background: rgba(245, 247, 255, 0.08); color: inherit; font-size: 20px; cursor: pointer; }
+.object-info-card dl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin: 15px 0 10px; overflow: hidden; border: 1px solid rgba(245, 247, 255, 0.1); border-radius: 12px; background: rgba(245, 247, 255, 0.1); }
+.object-info-card dl div { display: grid; gap: 3px; padding: 9px; background: rgba(13, 18, 32, 0.78); }
+.object-info-card dt { color: var(--glass-muted); font-size: 9px; }
+.object-info-card dd { margin: 0; font-size: 11px; font-variant-numeric: tabular-nums; }
+.object-info-constellation,
+.object-info-description { margin: 7px 2px; color: var(--glass-muted); font-size: 10px; line-height: 1.45; }
+.object-info-visibility { margin: 9px 2px; color: #88e0ad; font-size: 11px; }
+.object-info-visibility.low,
+.object-info-visibility.later { color: #f1cc82; }
+.object-info-visibility.not-tonight { color: #ffad9f; }
+.object-info-focus { width: 100%; min-height: 38px; margin-top: 8px; border: 1px solid rgba(245, 247, 255, 0.16); border-radius: 999px; background: rgba(245, 247, 255, 0.11); color: inherit; font: inherit; font-size: 12px; cursor: pointer; }
+.object-info-focus:hover { background: rgba(245, 247, 255, 0.18); }
+.object-info-card > small { display: block; margin: 9px 2px 0; color: var(--glass-muted); font-size: 9px; }
+
+@keyframes object-info-enter {
+  from { opacity: 0; transform: translate(-50%, 8px) scale(0.98); }
+  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+
+@media (max-width: 720px) {
+  .object-info-card { bottom: max(76px, calc(var(--app-safe-area-inset-bottom) + 64px)); }
+  .object-info-card dl { grid-template-columns: repeat(2, 1fr); }
 }
 
 .simulation-speed-presets button:hover,

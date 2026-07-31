@@ -10,14 +10,17 @@ export type CelestialObject = {
   rightAscension: number;
   declination: number;
   magnitude: number | null;
+  distanceLightYears?: number;
+  constellation?: { "zh-TW": string; en: string };
+  description?: { "zh-TW": string; en: string };
 };
 
 const equatorial = (degrees: number) => degrees * DEG;
 
 export const CELESTIAL_OBJECTS: readonly CelestialObject[] = [
-  { id: "sirius", name: { "zh-TW": "天狼星", en: "Sirius" }, aliases: ["Alpha Canis Majoris"], kind: "star", rightAscension: equatorial(101.2872), declination: equatorial(-16.7161), magnitude: -1.46 },
-  { id: "vega", name: { "zh-TW": "織女星", en: "Vega" }, aliases: ["Alpha Lyrae"], kind: "star", rightAscension: equatorial(279.2347), declination: equatorial(38.7837), magnitude: 0.03 },
-  { id: "altair", name: { "zh-TW": "牛郎星", en: "Altair" }, aliases: ["河鼓二", "Alpha Aquilae"], kind: "star", rightAscension: equatorial(297.6958), declination: equatorial(8.8683), magnitude: 0.77 },
+  { id: "sirius", name: { "zh-TW": "天狼星", en: "Sirius" }, aliases: ["Alpha Canis Majoris"], kind: "star", rightAscension: equatorial(101.2872), declination: equatorial(-16.7161), magnitude: -1.46, distanceLightYears: 8.6, constellation: { "zh-TW": "大犬座", en: "Canis Major" }, description: { "zh-TW": "夜空中最明亮的恆星。", en: "The brightest star in Earth's night sky." } },
+  { id: "vega", name: { "zh-TW": "織女星", en: "Vega" }, aliases: ["Alpha Lyrae"], kind: "star", rightAscension: equatorial(279.2347), declination: equatorial(38.7837), magnitude: 0.03, distanceLightYears: 25, constellation: { "zh-TW": "天琴座", en: "Lyra" } },
+  { id: "altair", name: { "zh-TW": "牛郎星", en: "Altair" }, aliases: ["河鼓二", "Alpha Aquilae"], kind: "star", rightAscension: equatorial(297.6958), declination: equatorial(8.8683), magnitude: 0.77, distanceLightYears: 16.7, constellation: { "zh-TW": "天鷹座", en: "Aquila" } },
   { id: "antares", name: { "zh-TW": "心宿二", en: "Antares" }, aliases: ["Alpha Scorpii"], kind: "star", rightAscension: equatorial(247.3519), declination: equatorial(-26.432), magnitude: 1.06 },
   { id: "betelgeuse", name: { "zh-TW": "參宿四", en: "Betelgeuse" }, aliases: ["Alpha Orionis"], kind: "star", rightAscension: equatorial(88.7929), declination: equatorial(7.4071), magnitude: 0.5 },
   { id: "polaris", name: { "zh-TW": "北極星", en: "Polaris" }, aliases: ["Alpha Ursae Minoris"], kind: "star", rightAscension: equatorial(37.9546), declination: equatorial(89.2641), magnitude: 1.98 },

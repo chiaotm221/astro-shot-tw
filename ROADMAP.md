@@ -62,6 +62,9 @@ positions remain deferred until validated ephemeris calculations are available.
 
 ### V2.2 — Object Information
 
+Status: Phase 1 implemented, pending full browser verification. Validated
+transit and set times remain follow-up work.
+
 - Reuse one information-card model across search, recommendations, and canvas
   selection.
 - Show coordinates, magnitude, visibility, distance, and rise/transit/set data

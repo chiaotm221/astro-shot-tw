@@ -16,7 +16,7 @@ export function ObjectSearch({ locale }: { locale: Locale }) {
   const listId = useId();
   const copy = COPY[locale];
 
-  const focusObject = (object: CelestialObject) => window.dispatchEvent(new CustomEvent("sky:focus-object", { detail: { id: object.id, label: object.name[locale], rightAscension: object.rightAscension, declination: object.declination } }));
+  const focusObject = (object: CelestialObject) => window.dispatchEvent(new CustomEvent("sky:focus-object", { detail: { object, id: object.id, label: object.name[locale], rightAscension: object.rightAscension, declination: object.declination } }));
 
   return <section className="object-search" aria-labelledby={`${listId}-title`}>
     <label id={`${listId}-title`} htmlFor={`${listId}-input`}>{copy.title}</label>

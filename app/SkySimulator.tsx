@@ -13,6 +13,7 @@ import {
 import { CameraSystem } from "./CameraSystem";
 import { ObservingSiteSelector } from "./components/ObservingSiteSelector";
 import { ObjectSearch } from "./components/ObjectSearch";
+import { ObjectInfoCard } from "./components/ObjectInfoCard";
 import { TonightRecommendations } from "./components/TonightRecommendations";
 import { LiquidGlassMenu } from "./LiquidGlassMenu";
 import {
@@ -51,6 +52,10 @@ import {
   OBSERVING_SITES,
   type ObservingSite,
 } from "./simulation/observing-sites";
+import {
+  CELESTIAL_OBJECTS,
+  type CelestialObject,
+} from "./simulation/celestial-objects";
 
 const OBSERVING_SITE_STORAGE_KEY = "astro-shot-observing-site";
 const CUSTOM_SITES_STORAGE_KEY = "astro-shot-custom-observing-sites";
@@ -1635,7 +1640,7 @@ function TimeSimulationMenu({
             onChange={(value) => update("rotationSpeed", value)}
           />
           <div className="simulation-speed-presets" aria-label={copy.speed}>
-            {[1, 60, 360, 720].map((speed) => (
+            {[1, 60, 120, 360, 720].map((speed) => (
               <button
                 key={speed}
                 type="button"
@@ -2019,6 +2024,7 @@ export function SkySimulator() {
   const [locale, setLocale] = useState<Locale>(defaultLocale);
   const [catalogCount, setCatalogCount] = useState(0);
   const [catalogReady, setCatalogReady] = useState(false);
+  const [selectedObject, setSelectedObject] = useState<CelestialObject | null>(null);
   const copy = UI_COPY[locale];
 
   const applyObservingSite = useCallback((site: ObservingSite) => {
@@ -2133,6 +2139,19 @@ export function SkySimulator() {
     settingsRef.current = settings;
   }, [settings]);
 
+  useEffect(() => {
+    const selectObject = (event: Event) => {
+      const object = (event as CustomEvent<{ object?: CelestialObject }>).detail?.object;
+      if (object) setSelectedObject(object);
+    };
+    window.addEventListener("sky:focus-object", selectObject);
+    window.addEventListener("sky:select-object", selectObject);
+    return () => {
+      window.removeEventListener("sky:focus-object", selectObject);
+      window.removeEventListener("sky:select-object", selectObject);
+    };
+  }, []);
+
   const updateCaptureLock = useCallback((locked: boolean) => {
     interactionLockedRef.current = locked;
     setCaptureLocked(locked);
@@ -2162,6 +2181,7 @@ export function SkySimulator() {
     let dragging = false;
     let pointerX = 0;
     let pointerY = 0;
+    let selectionStart: { x: number; y: number } | null = null;
     const activePointers = new Map<number, { x: number; y: number }>();
     let pinchStartDistance = 0;
     let pinchStartFieldOfView = DEFAULT_VIEW.fov;
@@ -2368,6 +2388,7 @@ export function SkySimulator() {
         dragging = true;
         pointerX = event.clientX;
         pointerY = event.clientY;
+        selectionStart = { x: event.clientX, y: event.clientY };
         return;
       }
       if (activePointers.size === 2) {
@@ -2409,6 +2430,9 @@ export function SkySimulator() {
       pointerY = event.clientY;
     };
     const pointerUp = (event: PointerEvent) => {
+      const selectionDistance = selectionStart
+        ? Math.hypot(event.clientX - selectionStart.x, event.clientY - selectionStart.y)
+        : Number.POSITIVE_INFINITY;
       activePointers.delete(event.pointerId);
       if (canvas.hasPointerCapture(event.pointerId)) {
         canvas.releasePointerCapture(event.pointerId);
@@ -2424,6 +2448,25 @@ export function SkySimulator() {
         return;
       }
       dragging = false;
+      if (selectionDistance <= 7 && !interactionLockedRef.current) {
+        const rectangle = canvas.getBoundingClientRect();
+        const clickX = event.clientX - rectangle.left;
+        const clickY = event.clientY - rectangle.top;
+        const basis = basisForView(view);
+        const focal = height / (2 * Math.tan(view.fov * 0.5));
+        const latitude = settingsRef.current.latitude * DEG;
+        const projected: ProjectedCelestial = { x: 0, y: 0, altitude: 0, depth: 0 };
+        let nearest: { object: CelestialObject; distance: number } | null = null;
+        for (const object of CELESTIAL_OBJECTS) {
+          const coordinates = { equatorialX: 0, equatorialY: 0, equatorialZ: 0 };
+          setEquatorialCoordinates(coordinates, object.rightAscension, object.declination);
+          if (!projectCelestial(coordinates, Math.sin(sidereal), Math.cos(sidereal), Math.sin(latitude), Math.cos(latitude), basis, focal, width, height, projected)) continue;
+          const distance = Math.hypot(projected.x - clickX, projected.y - clickY);
+          if (distance <= 20 && (!nearest || distance < nearest.distance)) nearest = { object, distance };
+        }
+        if (nearest) window.dispatchEvent(new CustomEvent("sky:select-object", { detail: { object: nearest.object } }));
+      }
+      selectionStart = null;
     };
     const wheel = (event: WheelEvent) => {
       if (interactionLockedRef.current) return;
@@ -3000,6 +3043,16 @@ export function SkySimulator() {
         locale={locale}
         disabled={captureLocked}
       />
+
+      {selectedObject && (
+        <ObjectInfoCard
+          object={selectedObject}
+          latitude={settings.latitude}
+          siderealRef={siderealRef}
+          locale={locale}
+          onClose={() => setSelectedObject(null)}
+        />
+      )}
 
       <LiquidGlassMenu
         sourceCanvasRef={canvasRef}

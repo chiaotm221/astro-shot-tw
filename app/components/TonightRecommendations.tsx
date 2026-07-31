@@ -92,6 +92,9 @@ export function TonightRecommendations({
     window.dispatchEvent(
       new CustomEvent("sky:focus-object", {
         detail: {
+          object: entry.object,
+          id: entry.object.id,
+          label: entry.object.name[locale],
           rightAscension: entry.object.rightAscension,
           declination: entry.object.declination,
         },
