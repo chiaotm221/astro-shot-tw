@@ -21,7 +21,8 @@ import { TaiwanObservingMap } from "./components/TaiwanObservingMap";
 import { WeatherConditions } from "./components/WeatherConditions";
 import { LightPollutionPanel } from "./components/LightPollutionPanel";
 import { PhotographyFrame, PhotographyPlanner } from "./components/PhotographyPlanner";
-import { PhotoImport } from "./components/PhotoImport";
+import { PhotoImport, type ImportedPhoto } from "./components/PhotoImport";
+import { AlignedPhotoOverlay, PhotoAlignmentControls } from "./components/PhotoAlignment";
 import { TonightRecommendations } from "./components/TonightRecommendations";
 import { LiquidGlassMenu } from "./LiquidGlassMenu";
 import {
@@ -65,6 +66,7 @@ import {
 } from "./simulation/celestial-objects";
 import { CONSTELLATION_FIGURES } from "./simulation/constellations";
 import { DEFAULT_PHOTOGRAPHY_PLAN, type PhotographyPlan } from "./simulation/photography";
+import { alignmentFromExif, DEFAULT_PHOTO_ALIGNMENT, type PhotoAlignment } from "./simulation/photo-alignment";
 import {
   localDateInputValue,
   solarEventsForLocalDay,
@@ -1771,6 +1773,12 @@ function SettingsPanel({
   onLocaleChange,
   photographyPlan,
   setPhotographyPlan,
+  importedPhoto,
+  photoAlignment,
+  setPhotoAlignment,
+  onApplyPhotoAlignment,
+  onImportPhoto,
+  onClearPhoto,
 }: {
   settings: Settings;
   setSettings: Dispatch<SetStateAction<Settings>>;
@@ -1786,6 +1794,12 @@ function SettingsPanel({
   onLocaleChange: (locale: Locale) => void;
   photographyPlan: PhotographyPlan;
   setPhotographyPlan: Dispatch<SetStateAction<PhotographyPlan>>;
+  importedPhoto: ImportedPhoto | null;
+  photoAlignment: PhotoAlignment;
+  setPhotoAlignment: Dispatch<SetStateAction<PhotoAlignment>>;
+  onApplyPhotoAlignment: (alignment: PhotoAlignment) => void;
+  onImportPhoto: (photo: ImportedPhoto) => void;
+  onClearPhoto: () => void;
 }) {
   const copy = UI_COPY[locale];
   const update = useCallback(
@@ -1821,11 +1835,21 @@ function SettingsPanel({
 
       <details className="section">
         <summary className="section-toggle">
+          <span>{locale === "zh-TW" ? "照片資料確認與對齊" : "Photo Confirmation & Alignment"}</span>
+          <span className="section-chevron" aria-hidden="true" />
+        </summary>
+        <div className="section-content">
+          {importedPhoto ? <PhotoAlignmentControls photo={importedPhoto} alignment={photoAlignment} setAlignment={setPhotoAlignment} onApply={onApplyPhotoAlignment} locale={locale} /> : <p className="alignment-empty">{locale === "zh-TW" ? "請先在「照片匯入與 EXIF」選擇照片。" : "Choose a photo in Photo Import & EXIF first."}</p>}
+        </div>
+      </details>
+
+      <details className="section">
+        <summary className="section-toggle">
           <span>{locale === "zh-TW" ? "照片匯入與 EXIF" : "Photo Import & EXIF"}</span>
           <span className="section-chevron" aria-hidden="true" />
         </summary>
         <div className="section-content">
-          <PhotoImport locale={locale} />
+          <PhotoImport locale={locale} photo={importedPhoto} onImport={onImportPhoto} onClear={onClearPhoto} />
         </div>
       </details>
 
@@ -2203,6 +2227,8 @@ export function SkySimulator() {
   const [catalogReady, setCatalogReady] = useState(false);
   const [selectedObject, setSelectedObject] = useState<CelestialObject | null>(null);
   const [photographyPlan, setPhotographyPlan] = useState(DEFAULT_PHOTOGRAPHY_PLAN);
+  const [importedPhoto, setImportedPhoto] = useState<ImportedPhoto | null>(null);
+  const [photoAlignment, setPhotoAlignment] = useState(DEFAULT_PHOTO_ALIGNMENT);
   const copy = UI_COPY[locale];
 
   const applyObservingSite = useCallback((site: ObservingSite) => {
@@ -2210,6 +2236,32 @@ export function SkySimulator() {
     setSettings((current) => ({ ...current, latitude: site.latitude }));
     observingLongitudeRef.current = site.longitude;
   }, []);
+
+  const importPhoto = useCallback((photo: ImportedPhoto) => {
+    setImportedPhoto(photo);
+    setPhotoAlignment(alignmentFromExif(photo.exif));
+  }, []);
+
+  useEffect(() => () => {
+    if (importedPhoto) URL.revokeObjectURL(importedPhoto.previewUrl);
+  }, [importedPhoto]);
+
+  const applyPhotoAlignment = useCallback((alignment: PhotoAlignment) => {
+    if (alignment.latitude === null || alignment.longitude === null) return;
+    const captureSite: ObservingSite = {
+      id: "photo-capture",
+      name: { "zh-TW": "照片拍攝位置", en: "Photo capture location" },
+      region: { "zh-TW": "EXIF／人工確認", en: "EXIF / manually confirmed" },
+      latitude: alignment.latitude,
+      longitude: alignment.longitude,
+      elevationMeters: alignment.elevationMeters ?? undefined,
+    };
+    setCustomSites((current) => [captureSite, ...current.filter((site) => site.id !== captureSite.id)]);
+    applyObservingSite(captureSite);
+    const captureTime = new Date(alignment.capturedAt).getTime();
+    if (Number.isFinite(captureTime)) simulationTimeRef.current = captureTime;
+    window.dispatchEvent(new CustomEvent("sky:set-view", { detail: { azimuthDegrees: alignment.azimuthDegrees, altitudeDegrees: alignment.tiltDegrees } }));
+  }, [applyObservingSite]);
 
   const selectObservingSite = useCallback((siteId: string, persist = true) => {
     const site =
@@ -2550,8 +2602,15 @@ export function SkySimulator() {
         label: detail.label ?? "",
       };
     };
+    const setSkyView = (event: Event) => {
+      const detail = (event as CustomEvent<{ azimuthDegrees?: number; altitudeDegrees?: number }>).detail;
+      if (!Number.isFinite(detail?.azimuthDegrees) || !Number.isFinite(detail?.altitudeDegrees)) return;
+      const toAzimuth = (detail.azimuthDegrees as number) * DEG;
+      focusAnimation = { startedAt: performance.now() / 1000, fromAzimuth: view.azimuth, fromAltitude: view.altitude, toAzimuth, toAltitude: clamp((detail.altitudeDegrees as number) * DEG, -8 * DEG, 87 * DEG), label: "" };
+    };
     window.addEventListener("sky:meteor", summonMeteor);
     window.addEventListener("sky:focus-object", focusCelestialObject);
+    window.addEventListener("sky:set-view", setSkyView);
 
     const pointerDown = (event: PointerEvent) => {
       if (interactionLockedRef.current) return;
@@ -3218,6 +3277,7 @@ export function SkySimulator() {
       galacticPanorama?.dispose();
       window.removeEventListener("sky:meteor", summonMeteor);
       window.removeEventListener("sky:focus-object", focusCelestialObject);
+      window.removeEventListener("sky:set-view", setSkyView);
       canvas.removeEventListener("pointerdown", pointerDown);
       canvas.removeEventListener("pointermove", pointerMove);
       canvas.removeEventListener("pointerup", pointerUp);
@@ -3236,6 +3296,8 @@ export function SkySimulator() {
         aria-label={copy.canvasLabel}
       />
       <div className="vignette" />
+
+      {importedPhoto && <AlignedPhotoOverlay photo={importedPhoto} alignment={photoAlignment} />}
 
       <CameraSystem
         sourceCanvasRef={canvasRef}
@@ -3301,6 +3363,12 @@ export function SkySimulator() {
             onLocaleChange={updateLocale}
             photographyPlan={photographyPlan}
             setPhotographyPlan={setPhotographyPlan}
+            importedPhoto={importedPhoto}
+            photoAlignment={photoAlignment}
+            setPhotoAlignment={setPhotoAlignment}
+            onApplyPhotoAlignment={applyPhotoAlignment}
+            onImportPhoto={importPhoto}
+            onClearPhoto={() => setImportedPhoto(null)}
           />
         </div>
       </LiquidGlassMenu>

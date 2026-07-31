@@ -60,6 +60,10 @@ import {
   photographyFieldOfView,
 } from "../app/simulation/photography.ts";
 import { hasExifData, readJpegExif } from "../app/simulation/exif.ts";
+import {
+  alignmentFromExif,
+  exifFieldMatches,
+} from "../app/simulation/photo-alignment.ts";
 
 test("object search normalizes aliases and localized names", () => {
   const index = createObjectSearchIndex(CELESTIAL_OBJECTS);
@@ -162,6 +166,14 @@ test("local JPEG EXIF parser reads a bounded little-endian orientation tag", () 
   const exif = readJpegExif(bytes.buffer);
   assert.equal(exif.orientation, 6);
   assert.ok(hasExifData(exif));
+});
+
+test("photo alignment preserves EXIF provenance after manual correction", () => {
+  const exif = { make: null, model: null, orientation: 6, capturedAt: "2026:07:15 21:30:00", focalLengthMm: 24, focalLength35Mm: null, latitude: 23.5, longitude: 121, altitudeMeters: 1000 };
+  const alignment = alignmentFromExif(exif);
+  assert.equal(alignment.capturedAt, "2026-07-15T21:30:00");
+  assert.ok(exifFieldMatches(alignment, exif, "latitude"));
+  assert.ok(!exifFieldMatches({ ...alignment, latitude: 23.6 }, exif, "latitude"));
 });
 
 async function render() {

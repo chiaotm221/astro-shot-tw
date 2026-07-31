@@ -805,6 +805,30 @@ button {
 .photo-import-message { margin: 0; padding: 7px 9px; border-radius: 8px; background: rgba(241, 204, 130, 0.08); color: #f1cc82; font-size: 8px; line-height: 1.45; }
 .photo-import > small { color: var(--glass-muted); font-size: 8px; line-height: 1.45; }
 
+.alignment-empty { margin: 0 -10px; padding: 15px; color: var(--glass-muted); font-size: 9px; line-height: 1.5; }
+.photo-alignment-controls { display: grid; gap: 10px; margin: 0 -10px; padding: 8px 15px 12px; }
+.alignment-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.alignment-fields label { display: grid; gap: 4px; color: var(--glass-muted); font-size: 8px; }
+.alignment-fields label > span { display: flex; align-items: center; justify-content: space-between; gap: 5px; }
+.alignment-fields small { padding: 1px 4px; border-radius: 4px; font-size: 7px; }
+.alignment-fields small.exif { background: rgba(136, 224, 173, 0.1); color: #88e0ad; }
+.alignment-fields small.manual { background: rgba(241, 204, 130, 0.09); color: #f1cc82; }
+.alignment-fields input,
+.alignment-fields select { width: 100%; min-height: 32px; padding: 0 7px; border: 1px solid rgba(245, 247, 255, 0.12); border-radius: 8px; background: rgba(245, 247, 255, 0.06); color: var(--glass-foreground); color-scheme: dark; font-size: 8px; }
+.alignment-range,
+.alignment-transform-grid label { display: grid; gap: 5px; }
+.alignment-range > span { display: flex; justify-content: space-between; gap: 8px; color: var(--glass-muted); font-size: 9px; }
+.alignment-range output { color: var(--glass-foreground); font-variant-numeric: tabular-nums; }
+.alignment-range input,
+.alignment-transform-grid input { width: 100%; accent-color: rgba(226, 238, 255, 0.9); }
+.alignment-transform-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.alignment-transform-grid label > span { color: var(--glass-muted); font-size: 8px; }
+.apply-photo-alignment { min-height: 40px; border: 1px solid rgba(245, 247, 255, 0.15); border-radius: 999px; background: rgba(245, 247, 255, 0.11); color: var(--glass-foreground); font: inherit; font-size: 10px; cursor: pointer; }
+.apply-photo-alignment:disabled { cursor: not-allowed; opacity: 0.4; }
+.photo-alignment-controls > small { color: var(--glass-muted); font-size: 8px; line-height: 1.5; }
+.aligned-photo-overlay { position: fixed; inset: 0; z-index: 2; overflow: hidden; pointer-events: none; }
+.aligned-photo-overlay img { width: 100%; height: 100%; object-fit: contain; transform-origin: center; transition: transform 120ms ease; }
+
 .observing-site-control:hover {
   background: var(--glass-hover);
 }
