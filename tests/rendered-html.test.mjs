@@ -34,6 +34,11 @@ import {
   findMoonRiseAndSet,
   moonPhaseKey,
 } from "../app/simulation/moon.ts";
+import {
+  galacticCoreHorizontal,
+  planMilkyWay,
+  solarAltitude,
+} from "../app/simulation/milky-way.ts";
 
 test("object search normalizes aliases and localized names", () => {
   const index = createObjectSearchIndex(CELESTIAL_OBJECTS);
@@ -51,6 +56,17 @@ test("moon calculations preserve phase and event invariants", () => {
   const events = findMoonRiseAndSet(knownNewMoon, 23.5, 121);
   assert.ok(events.rise === null || events.rise > knownNewMoon);
   assert.ok(events.set === null || events.set > knownNewMoon);
+});
+
+test("Milky Way planner returns bounded coordinates and planning windows", () => {
+  const timestamp = Date.UTC(2026, 6, 15, 16, 0);
+  const core = galacticCoreHorizontal(timestamp, 23.5, 121);
+  assert.ok(core.azimuthDegrees >= 0 && core.azimuthDegrees < 360);
+  assert.ok(core.altitudeDegrees >= -90 && core.altitudeDegrees <= 90);
+  assert.ok(solarAltitude(timestamp, 23.5, 121) < 0);
+  const plan = planMilkyWay(timestamp, 23.5, 121);
+  assert.ok(plan.windowStart === null || plan.windowEnd > plan.windowStart);
+  assert.ok(plan.best === null || plan.best.altitude >= 10);
 });
 
 async function render() {

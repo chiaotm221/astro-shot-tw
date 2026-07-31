@@ -85,6 +85,9 @@ Status: V3.0 Phase 1 implemented, pending authoritative ephemeris comparison
 and full browser verification.
 
 - Moon phase, moonrise, moonset, and moonlight impact.
+Status: V3.1 Phase 1 implemented, pending authoritative comparison and full
+browser verification.
+
 - Milky Way core direction and photography windows.
 - An overnight timeline with pause, playback, and time acceleration.
 

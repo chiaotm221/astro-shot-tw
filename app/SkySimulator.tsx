@@ -15,6 +15,7 @@ import { ObservingSiteSelector } from "./components/ObservingSiteSelector";
 import { ObjectSearch } from "./components/ObjectSearch";
 import { ObjectInfoCard } from "./components/ObjectInfoCard";
 import { MoonConditions } from "./components/MoonConditions";
+import { MilkyWayPlanner } from "./components/MilkyWayPlanner";
 import { TonightRecommendations } from "./components/TonightRecommendations";
 import { LiquidGlassMenu } from "./LiquidGlassMenu";
 import {
@@ -1739,6 +1740,16 @@ function SettingsPanel({
           </button>
         </div>
       </div>
+
+      <details className="section">
+        <summary className="section-toggle">
+          <span>{locale === "zh-TW" ? "銀河攝影助手" : "Milky Way Planner"}</span>
+          <span className="section-chevron" aria-hidden="true" />
+        </summary>
+        <div className="section-content">
+          <MilkyWayPlanner simulationTimeRef={simulationTimeRef} latitude={settings.latitude} longitude={selectedSite.longitude} locale={locale} />
+        </div>
+      </details>
 
       <details className="section">
         <summary className="section-toggle">
