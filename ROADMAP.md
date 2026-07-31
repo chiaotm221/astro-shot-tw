@@ -110,6 +110,9 @@ estimate ranges and source limitations, pending full browser verification.
 
 ### V5.x
 
+Status: V5.0 Phase 1 camera field-of-view and composition planning implemented,
+pending full browser and visual verification.
+
 - Photo selection and aligned sky or star-trail simulation using available
   EXIF plus user-confirmed GPS, approximate elevation, direction, orientation,
   focal length, and manual correction.

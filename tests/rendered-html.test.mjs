@@ -54,6 +54,11 @@ import {
   combinedDarknessScore,
   LIGHT_POLLUTION_PROFILES,
 } from "../app/simulation/light-pollution.ts";
+import {
+  DEFAULT_PHOTOGRAPHY_PLAN,
+  isValidPhotographyPlan,
+  photographyFieldOfView,
+} from "../app/simulation/photography.ts";
 
 test("object search normalizes aliases and localized names", () => {
   const index = createObjectSearchIndex(CELESTIAL_OBJECTS);
@@ -125,6 +130,15 @@ test("light-pollution profiles cover bundled sites and moonlight cannot improve 
     assert.ok(combinedDarknessScore(profile, 1, 60) <= profile.baseDarknessScore);
     assert.ok(profile.estimatedVisibleStars[1] >= profile.estimatedVisibleStars[0]);
   }
+});
+
+test("camera geometry narrows with focal length and swaps on portrait orientation", () => {
+  const wide = photographyFieldOfView(DEFAULT_PHOTOGRAPHY_PLAN);
+  const telephoto = photographyFieldOfView({ ...DEFAULT_PHOTOGRAPHY_PLAN, focalLengthMm: 50 });
+  const portrait = photographyFieldOfView({ ...DEFAULT_PHOTOGRAPHY_PLAN, orientation: "portrait" });
+  assert.ok(telephoto.horizontalDegrees < wide.horizontalDegrees);
+  assert.ok(Math.abs(portrait.horizontalDegrees - wide.verticalDegrees) < 1e-9);
+  assert.ok(isValidPhotographyPlan(DEFAULT_PHOTOGRAPHY_PLAN));
 });
 
 async function render() {

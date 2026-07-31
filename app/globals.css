@@ -749,6 +749,45 @@ button {
 .light-pollution-compare button b { text-align: right; font-size: 10px; font-weight: 600; }
 .light-pollution-panel > small { color: var(--glass-muted); font-size: 8px; line-height: 1.45; }
 
+.photography-planner { display: grid; gap: 10px; margin: 0 -10px; padding: 8px 15px 12px; }
+.photo-control-grid { display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 7px; }
+.photo-control-grid label { display: grid; gap: 4px; color: var(--glass-muted); font-size: 8px; }
+.photo-control-grid select { min-height: 34px; padding: 0 8px; border: 1px solid rgba(245, 247, 255, 0.13); border-radius: 9px; background: rgba(245, 247, 255, 0.07); color: var(--glass-foreground); font-size: 9px; }
+.photo-control-grid option { background: #151a25; }
+.photo-range { display: grid; gap: 5px; padding: 3px 2px; }
+.photo-range > span { display: flex; justify-content: space-between; gap: 10px; color: var(--glass-muted); font-size: 9px; }
+.photo-range output { color: var(--glass-foreground); font-variant-numeric: tabular-nums; }
+.photo-range input { width: 100%; accent-color: rgba(226, 238, 255, 0.9); }
+.photo-focal-presets { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+.photo-focal-presets button,
+.photo-orientation button,
+.photo-frame-toggle,
+.photo-plan-actions button { min-height: 32px; padding: 0 5px; border: 1px solid rgba(245, 247, 255, 0.12); border-radius: 999px; background: rgba(245, 247, 255, 0.055); color: var(--glass-foreground); font: inherit; font-size: 8px; cursor: pointer; }
+.photo-focal-presets button.active,
+.photo-orientation button.active,
+.photo-frame-toggle.active { border-color: rgba(245, 247, 255, 0.3); background: rgba(245, 247, 255, 0.16); }
+.photo-orientation,
+.photo-plan-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.photo-fov-readout { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 10px; border-radius: 10px; background: rgba(245, 247, 255, 0.055); }
+.photo-fov-readout span { color: var(--glass-muted); font-size: 9px; }
+.photo-fov-readout strong { font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.photo-frame-toggle { width: 100%; font-size: 10px; }
+.saved-photo-plans { display: grid; gap: 5px; }
+.saved-photo-plans > span { color: var(--glass-muted); font-size: 8px; }
+.saved-photo-plans button { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 29px; padding: 0 8px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--glass-foreground); font: inherit; font-size: 8px; cursor: pointer; }
+.saved-photo-plans button:hover { border-color: rgba(245, 247, 255, 0.11); background: rgba(245, 247, 255, 0.07); }
+.saved-photo-plans small { color: var(--glass-muted); font-size: 7px; }
+.photography-frame { position: fixed; left: 50%; top: 50%; z-index: 3; max-width: 92vw; border: 1px solid rgba(232, 240, 255, 0.78); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), inset 0 0 35px rgba(0, 0, 0, 0.08); pointer-events: none; transition: width 180ms ease, height 180ms ease, transform 180ms ease; }
+.photography-frame::before,
+.photography-frame::after { position: absolute; content: ""; background: rgba(232, 240, 255, 0.28); }
+.photography-frame::before { left: 33.333%; top: 0; width: 33.333%; height: 100%; border-left: 1px solid rgba(232, 240, 255, 0.24); border-right: 1px solid rgba(232, 240, 255, 0.24); background: transparent; }
+.photography-frame::after { left: 0; top: 33.333%; width: 100%; height: 33.333%; border-top: 1px solid rgba(232, 240, 255, 0.24); border-bottom: 1px solid rgba(232, 240, 255, 0.24); background: transparent; }
+.photography-frame > span { position: absolute; left: 0; top: -23px; padding: 3px 6px; border-radius: 5px; background: rgba(8, 12, 22, 0.62); color: rgba(245, 247, 255, 0.86); font-size: 8px; }
+.photography-frame > i { position: absolute; width: 12px; height: 12px; border-color: rgba(255, 255, 255, 0.9); }
+.photography-frame > i:first-of-type { left: -1px; top: -1px; border-left: 2px solid; border-top: 2px solid; }
+.photography-frame > i:nth-of-type(2) { right: -1px; top: -1px; border-right: 2px solid; border-top: 2px solid; }
+.photography-frame > i:last-of-type { right: -1px; bottom: -1px; border-right: 2px solid; border-bottom: 2px solid; }
+
 .observing-site-control:hover {
   background: var(--glass-hover);
 }

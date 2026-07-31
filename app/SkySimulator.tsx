@@ -20,6 +20,7 @@ import { MilkyWayPlanner } from "./components/MilkyWayPlanner";
 import { TaiwanObservingMap } from "./components/TaiwanObservingMap";
 import { WeatherConditions } from "./components/WeatherConditions";
 import { LightPollutionPanel } from "./components/LightPollutionPanel";
+import { PhotographyFrame, PhotographyPlanner } from "./components/PhotographyPlanner";
 import { TonightRecommendations } from "./components/TonightRecommendations";
 import { LiquidGlassMenu } from "./LiquidGlassMenu";
 import {
@@ -62,6 +63,7 @@ import {
   type CelestialObject,
 } from "./simulation/celestial-objects";
 import { CONSTELLATION_FIGURES } from "./simulation/constellations";
+import { DEFAULT_PHOTOGRAPHY_PLAN, type PhotographyPlan } from "./simulation/photography";
 import {
   localDateInputValue,
   solarEventsForLocalDay,
@@ -1766,6 +1768,8 @@ function SettingsPanel({
   catalogReady,
   locale,
   onLocaleChange,
+  photographyPlan,
+  setPhotographyPlan,
 }: {
   settings: Settings;
   setSettings: Dispatch<SetStateAction<Settings>>;
@@ -1779,6 +1783,8 @@ function SettingsPanel({
   catalogReady: boolean;
   locale: Locale;
   onLocaleChange: (locale: Locale) => void;
+  photographyPlan: PhotographyPlan;
+  setPhotographyPlan: Dispatch<SetStateAction<PhotographyPlan>>;
 }) {
   const copy = UI_COPY[locale];
   const update = useCallback(
@@ -1811,6 +1817,16 @@ function SettingsPanel({
           </button>
         </div>
       </div>
+
+      <details className="section">
+        <summary className="section-toggle">
+          <span>{locale === "zh-TW" ? "攝影構圖規劃" : "Photography Planning"}</span>
+          <span className="section-chevron" aria-hidden="true" />
+        </summary>
+        <div className="section-content">
+          <PhotographyPlanner plan={photographyPlan} setPlan={setPhotographyPlan} locale={locale} />
+        </div>
+      </details>
 
       <details className="section">
         <summary className="section-toggle">
@@ -2162,6 +2178,7 @@ export function SkySimulator() {
     currentSiderealAngle(DEFAULT_OBSERVING_SITE.longitude),
   );
   const simulationTimeRef = useRef(0);
+  const viewFovRef = useRef(DEFAULT_VIEW.fov);
   const interactionLockedRef = useRef(false);
   const [settings, setSettings] = useState(INITIAL_SETTINGS);
   const [selectedSite, setSelectedSite] = useState(DEFAULT_OBSERVING_SITE);
@@ -2174,6 +2191,7 @@ export function SkySimulator() {
   const [catalogCount, setCatalogCount] = useState(0);
   const [catalogReady, setCatalogReady] = useState(false);
   const [selectedObject, setSelectedObject] = useState<CelestialObject | null>(null);
+  const [photographyPlan, setPhotographyPlan] = useState(DEFAULT_PHOTOGRAPHY_PLAN);
   const copy = UI_COPY[locale];
 
   const applyObservingSite = useCallback((site: ObservingSite) => {
@@ -3138,6 +3156,7 @@ export function SkySimulator() {
       }
 
       const basis = basisForView(view);
+      viewFovRef.current = view.fov;
       const focal = height / (2 * Math.tan(view.fov * 0.5));
       drawBackground(basis, focal, settingsNow);
       drawConstellations(basis, focal, settingsNow);
@@ -3241,6 +3260,8 @@ export function SkySimulator() {
         />
       )}
 
+      {photographyPlan.frameVisible && <PhotographyFrame plan={photographyPlan} viewFovRef={viewFovRef} locale={locale} />}
+
       <LiquidGlassMenu
         sourceCanvasRef={canvasRef}
         open={panelOpen}
@@ -3267,6 +3288,8 @@ export function SkySimulator() {
             catalogReady={catalogReady}
             locale={locale}
             onLocaleChange={updateLocale}
+            photographyPlan={photographyPlan}
+            setPhotographyPlan={setPhotographyPlan}
           />
         </div>
       </LiquidGlassMenu>
