@@ -105,7 +105,7 @@ async function validateOutput() {
 
   const html = await readFile(indexPath, "utf8");
   assert(/^<!doctype html>/i.test(html.trimStart()), "index.html needs a doctype");
-  assert(/<html[^>]+lang="zh-CN"/i.test(html), "index.html needs lang=\"zh-CN\"");
+  assert(/<html[^>]+lang="zh-TW"/i.test(html), "index.html needs lang=\"zh-TW\"");
   assert(/<meta[^>]+charset="UTF-8"/i.test(html), "index.html needs UTF-8 charset");
   assert(
     /<meta[^>]+name="viewport"[^>]+content="[^"]*width=device-width[^"]*initial-scale=1\.0[^"]*viewport-fit=cover[^"]*"/i.test(

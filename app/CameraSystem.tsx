@@ -11,6 +11,7 @@ import {
   type WheelEvent as ReactWheelEvent,
 } from "react";
 import { flushSync } from "react-dom";
+import type { Locale } from "./i18n/types";
 import { pinchRatio, pointerDistance } from "./pinch-gesture.mjs";
 import { isXhsBuild } from "./site-path";
 
@@ -38,7 +39,7 @@ type CameraSystemProps = {
   menuOpen: boolean;
   onActiveChange: (active: boolean) => void;
   onCaptureLockChange: (locked: boolean) => void;
-  locale: "zh-CN" | "en";
+  locale: Locale;
 };
 
 type LongExposureSession = {
@@ -58,41 +59,41 @@ const MODAL_CLOSE_DURATION = 150;
 const UI_IDLE_TIMEOUT = 2000;
 
 const COPY = {
-  "zh-CN": {
-    enterCamera: "进入相机模式",
-    exitCamera: "退出相机模式",
-    video: "视频",
-    photo: "照片",
-    longExposure: "长曝光",
-    takePhoto: "拍摄照片",
-    startVideo: "开始录制视频",
-    stopVideo: "停止录制视频",
-    startLongExposure: "开始长曝光",
-    stopLongExposure: "停止长曝光",
-    saving: "正在存入图库",
-    savedPhoto: "照片已存入图库",
-    savedVideo: "视频已存入图库",
-    savedLongExposure: "长曝光已存入图库",
-    saveFailed: "保存失败，请检查浏览器存储空间",
-    recordingFailed: "当前浏览器无法开始录制",
-    gallery: "图库",
-    closeGallery: "关闭图库",
-    backToGallery: "返回图库",
-    openGallery: "打开图库",
-    videoBadge: "视频",
-    longExposureBadge: "长曝光",
-    photoBadge: "照片",
-    info: "影像信息",
+  "zh-TW": {
+    enterCamera: "進入相機模式",
+    exitCamera: "退出相機模式",
+    video: "影片",
+    photo: "相片",
+    longExposure: "長時間曝光",
+    takePhoto: "拍攝相片",
+    startVideo: "開始錄製影片",
+    stopVideo: "停止錄製影片",
+    startLongExposure: "開始長時間曝光",
+    stopLongExposure: "停止長時間曝光",
+    saving: "正在存入圖庫",
+    savedPhoto: "相片已存入圖庫",
+    savedVideo: "影片已存入圖庫",
+    savedLongExposure: "長時間曝光已存入圖庫",
+    saveFailed: "儲存失敗，請檢查瀏覽器儲存空間",
+    recordingFailed: "目前瀏覽器無法開始錄製",
+    gallery: "圖庫",
+    closeGallery: "關閉圖庫",
+    backToGallery: "返回圖庫",
+    openGallery: "開啟圖庫",
+    videoBadge: "影片",
+    longExposureBadge: "長時間曝光",
+    photoBadge: "相片",
+    info: "影像資訊",
     more: "更多操作",
-    downloadOriginal: "下载原图",
-    deleteCapture: "删除",
-    deleteConfirm: "确定删除这项影像吗？此操作无法撤销。",
-    capturedAt: "拍摄时间",
-    duration: "时长",
+    downloadOriginal: "下載原始檔",
+    deleteCapture: "刪除",
+    deleteConfirm: "確定要刪除這項影像嗎？此操作無法復原。",
+    capturedAt: "拍攝時間",
+    duration: "長度",
     dimensions: "尺寸",
-    fileType: "文件类型",
-    zoomHint: "双指或滚轮缩放",
-    empty: "还没有拍摄内容",
+    fileType: "檔案類型",
+    zoomHint: "雙指或滾輪縮放",
+    empty: "尚無拍攝內容",
   },
   en: {
     enterCamera: "Enter camera mode",
@@ -239,7 +240,7 @@ function formatElapsed(milliseconds: number) {
 
 function captureDate(
   capture: GalleryCapture,
-  locale: "zh-CN" | "en",
+  locale: Locale,
 ) {
   return new Intl.DateTimeFormat(locale, {
     month: "short",
@@ -1045,7 +1046,7 @@ export function CameraSystem({
           className="camera-modes t-tabs"
           data-liquid-glass="camera-modes"
           role="tablist"
-          aria-label={locale === "zh-CN" ? "拍摄模式" : "Capture mode"}
+          aria-label={locale === "zh-TW" ? "拍攝模式" : "Capture mode"}
         >
           <span
             ref={tabPillRef}

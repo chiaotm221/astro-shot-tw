@@ -9,7 +9,7 @@ export default defineConfig({
     fetch:
       "((..._arguments) => Promise.reject(new Error('Network requests are unavailable in the XHS container')))",
     "process.env.NEXT_PUBLIC_BASE_PATH": JSON.stringify(""),
-    "process.env.NEXT_PUBLIC_DEFAULT_LOCALE": JSON.stringify("zh-CN"),
+    "process.env.NEXT_PUBLIC_DEFAULT_LOCALE": JSON.stringify("zh-TW"),
     "process.env.NEXT_PUBLIC_XHS_BUILD": JSON.stringify("true"),
   },
   plugins: [react()],

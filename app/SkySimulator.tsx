@@ -44,12 +44,13 @@ import {
 } from "./simulation/settings";
 import {
   DEFAULT_OBSERVING_SITE,
-  getObservingSiteById,
+  isValidObservingSite,
   OBSERVING_SITES,
   type ObservingSite,
 } from "./simulation/observing-sites";
 
 const OBSERVING_SITE_STORAGE_KEY = "astro-shot-observing-site";
+const CUSTOM_SITES_STORAGE_KEY = "astro-shot-custom-observing-sites";
 const INITIAL_SETTINGS: Settings = {
   ...DEFAULT_SETTINGS,
   latitude: DEFAULT_OBSERVING_SITE.latitude,
@@ -1575,6 +1576,8 @@ function SettingsPanel({
   setSettings,
   selectedSite,
   onObservingSiteChange,
+  sites,
+  onSaveCustomSite,
   catalogCount,
   catalogReady,
   locale,
@@ -1584,6 +1587,8 @@ function SettingsPanel({
   setSettings: Dispatch<SetStateAction<Settings>>;
   selectedSite: ObservingSite;
   onObservingSiteChange: (siteId: string) => void;
+  sites: readonly ObservingSite[];
+  onSaveCustomSite: (name: string, latitude: number, longitude: number) => void;
   catalogCount: number;
   catalogReady: boolean;
   locale: Locale;
@@ -1612,28 +1617,12 @@ function SettingsPanel({
             className="locale-toggle"
             type="button"
             aria-label={copy.languageLabel}
-            onClick={() => onLocaleChange(locale === "zh-CN" ? "en" : "zh-CN")}
+            onClick={() => onLocaleChange(locale === "zh-TW" ? "en" : "zh-TW")}
           >
-            <span className={locale === "zh-CN" ? "active" : ""}>中</span>
+            <span className={locale === "zh-TW" ? "active" : ""}>中</span>
             <span className="locale-divider">/</span>
             <span className={locale === "en" ? "active" : ""}>EN</span>
           </button>
-          {!isXhsBuild && (
-            <a
-              className="github-link"
-              href="https://github.com/CatsJuice/astro-shot"
-              target="_blank"
-              rel="noreferrer"
-              aria-label={copy.githubLabel}
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path
-                  fill="currentColor"
-                  d="M12 .7a11.6 11.6 0 0 0-3.67 22.6c.58.1.79-.25.79-.56v-2.25c-3.24.7-3.92-1.38-3.92-1.38-.53-1.35-1.3-1.71-1.3-1.71-1.06-.73.08-.71.08-.71 1.17.08 1.79 1.2 1.79 1.2 1.04 1.79 2.73 1.27 3.4.97.1-.76.4-1.27.74-1.56-2.59-.3-5.31-1.3-5.31-5.74 0-1.27.45-2.3 1.2-3.12-.12-.3-.52-1.48.11-3.08 0 0 .98-.31 3.19 1.19a11 11 0 0 1 5.8 0c2.21-1.5 3.18-1.19 3.18-1.19.64 1.6.24 2.78.12 3.08.75.82 1.2 1.85 1.2 3.12 0 4.46-2.73 5.44-5.32 5.73.42.36.79 1.07.79 2.16v3.2c0 .31.21.67.8.56A11.6 11.6 0 0 0 12 .7Z"
-                />
-              </svg>
-            </a>
-          )}
         </div>
       </div>
 
@@ -1644,9 +1633,11 @@ function SettingsPanel({
         </summary>
         <div className="section-content">
           <ObservingSiteSelector
-            sites={OBSERVING_SITES}
+            sites={sites}
             selectedSite={selectedSite}
             onChange={onObservingSiteChange}
+            onSaveCustom={onSaveCustomSite}
+            locale={locale}
           />
           <RangeControl
             label={copy.rotation}
@@ -1904,6 +1895,7 @@ export function SkySimulator() {
   const interactionLockedRef = useRef(false);
   const [settings, setSettings] = useState(INITIAL_SETTINGS);
   const [selectedSite, setSelectedSite] = useState(DEFAULT_OBSERVING_SITE);
+  const [customSites, setCustomSites] = useState<readonly ObservingSite[]>([]);
   const [panelOpen, setPanelOpen] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
   const [captureLocked, setCaptureLocked] = useState(false);
@@ -1912,11 +1904,18 @@ export function SkySimulator() {
   const [catalogReady, setCatalogReady] = useState(false);
   const copy = UI_COPY[locale];
 
-  const selectObservingSite = useCallback((siteId: string, persist = true) => {
-    const site = getObservingSiteById(siteId);
+  const applyObservingSite = useCallback((site: ObservingSite) => {
     setSelectedSite(site);
     setSettings((current) => ({ ...current, latitude: site.latitude }));
     observingLongitudeRef.current = site.longitude;
+  }, []);
+
+  const selectObservingSite = useCallback((siteId: string, persist = true) => {
+    const site =
+      OBSERVING_SITES.find((candidate) => candidate.id === siteId) ??
+      customSites.find((candidate) => candidate.id === siteId) ??
+      DEFAULT_OBSERVING_SITE;
+    applyObservingSite(site);
     if (persist) {
       try {
         window.localStorage.setItem(OBSERVING_SITE_STORAGE_KEY, site.id);
@@ -1924,23 +1923,70 @@ export function SkySimulator() {
         // Storage availability must not block the simulator.
       }
     }
-  }, []);
+  }, [applyObservingSite, customSites]);
+
+  const saveCustomSite = useCallback(
+    (name: string, latitude: number, longitude: number) => {
+      const site: ObservingSite = {
+        id: `custom-${Date.now()}`,
+        name: { "zh-TW": name, en: name },
+        region: { "zh-TW": "自訂位置", en: "Custom location" },
+        latitude,
+        longitude,
+      };
+      setCustomSites((current) => {
+        const nextSites = [site, ...current].slice(0, 8);
+        try {
+          window.localStorage.setItem(
+            CUSTOM_SITES_STORAGE_KEY,
+            JSON.stringify(nextSites),
+          );
+        } catch {
+          // Storage availability must not block custom locations.
+        }
+        return nextSites;
+      });
+      applyObservingSite(site);
+      try {
+        window.localStorage.setItem(OBSERVING_SITE_STORAGE_KEY, site.id);
+      } catch {
+        // Storage availability must not block the simulator.
+      }
+    },
+    [applyObservingSite],
+  );
 
   useEffect(() => {
     let storedSiteId: string | null = null;
+    let restoredCustomSites: ObservingSite[] = [];
     try {
+      const storedCustomSites = window.localStorage.getItem(
+        CUSTOM_SITES_STORAGE_KEY,
+      );
+      if (storedCustomSites) {
+        const parsedSites: unknown = JSON.parse(storedCustomSites);
+        if (Array.isArray(parsedSites)) {
+          restoredCustomSites = parsedSites
+            .filter(isValidObservingSite)
+            .filter((site) => site.id.startsWith("custom-"))
+            .slice(0, 8);
+        }
+      }
       storedSiteId = window.localStorage.getItem(OBSERVING_SITE_STORAGE_KEY);
     } catch {
       // Use the default site when storage is unavailable.
     }
-    if (!storedSiteId) return;
-    const restoredSiteId = storedSiteId;
-    const siteTimer = window.setTimeout(
-      () => selectObservingSite(restoredSiteId, false),
-      0,
-    );
+    if (!storedSiteId && restoredCustomSites.length === 0) return;
+    const restoredSite =
+      OBSERVING_SITES.find((site) => site.id === storedSiteId) ??
+      restoredCustomSites.find((site) => site.id === storedSiteId) ??
+      DEFAULT_OBSERVING_SITE;
+    const siteTimer = window.setTimeout(() => {
+      setCustomSites(restoredCustomSites);
+      applyObservingSite(restoredSite);
+    }, 0);
     return () => window.clearTimeout(siteTimer);
-  }, [selectObservingSite]);
+  }, [applyObservingSite]);
 
   useEffect(() => {
     const storedLocale = window.localStorage.getItem("sky-locale");
@@ -2762,6 +2808,8 @@ export function SkySimulator() {
             setSettings={setSettings}
             selectedSite={selectedSite}
             onObservingSiteChange={selectObservingSite}
+            sites={[...OBSERVING_SITES, ...customSites]}
+            onSaveCustomSite={saveCustomSite}
             catalogCount={catalogCount}
             catalogReady={catalogReady}
             locale={locale}

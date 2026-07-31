@@ -14,6 +14,7 @@ procedural meteors and fireballs.
 - Weak and strong fireball variants
 - A WebGL liquid-glass control panel
 - Responsive controls with Chinese and English interface localization
+- Taiwan observing sites, custom coordinates, and optional browser geolocation
 
 ## Getting Started
 

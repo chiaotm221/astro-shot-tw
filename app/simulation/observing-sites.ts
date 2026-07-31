@@ -79,3 +79,27 @@ export const DEFAULT_OBSERVING_SITE = OBSERVING_SITES[0];
 export function getObservingSiteById(id: string | null | undefined) {
   return OBSERVING_SITES.find((site) => site.id === id) ?? DEFAULT_OBSERVING_SITE;
 }
+
+export function isValidLatitude(value: number) {
+  return Number.isFinite(value) && value >= -90 && value <= 90;
+}
+
+export function isValidLongitude(value: number) {
+  return Number.isFinite(value) && value >= -180 && value <= 180;
+}
+
+export function isValidObservingSite(value: unknown): value is ObservingSite {
+  if (!value || typeof value !== "object") return false;
+  const site = value as Partial<ObservingSite>;
+  return (
+    typeof site.id === "string" &&
+    typeof site.name?.["zh-TW"] === "string" &&
+    typeof site.name?.en === "string" &&
+    typeof site.region?.["zh-TW"] === "string" &&
+    typeof site.region?.en === "string" &&
+    typeof site.latitude === "number" &&
+    isValidLatitude(site.latitude) &&
+    typeof site.longitude === "number" &&
+    isValidLongitude(site.longitude)
+  );
+}

@@ -3,8 +3,12 @@ const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 export const isXhsBuild =
   process.env.NEXT_PUBLIC_XHS_BUILD === "true";
 
+const configuredDefaultLocale = process.env.NEXT_PUBLIC_DEFAULT_LOCALE;
+
 export const defaultLocale =
-  process.env.NEXT_PUBLIC_DEFAULT_LOCALE === "zh-CN" ? "zh-CN" : "en";
+  configuredDefaultLocale === "zh-TW" || configuredDefaultLocale === "zh-CN"
+    ? "zh-TW"
+    : "en";
 
 type XhsRuntimeAssets = {
   paths: Record<string, string>;

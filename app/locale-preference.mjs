@@ -1,6 +1,9 @@
 export function resolveInitialLocale(storedLocale, defaultLocale) {
-  if (storedLocale === "zh-CN" || storedLocale === "en") {
+  if (storedLocale === "zh-CN") return "zh-TW";
+  if (storedLocale === "zh-TW" || storedLocale === "en") {
     return storedLocale;
   }
-  return defaultLocale === "zh-CN" ? "zh-CN" : "en";
+  return defaultLocale === "zh-TW" || defaultLocale === "zh-CN"
+    ? "zh-TW"
+    : "en";
 }

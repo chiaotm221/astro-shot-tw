@@ -9,6 +9,10 @@ import {
 import { createOpeningFireballCue } from "../app/opening-fireball.mjs";
 import { resolveInitialLocale } from "../app/locale-preference.mjs";
 import {
+  isValidLatitude,
+  isValidLongitude,
+} from "../app/simulation/observing-sites.ts";
+import {
   firstStarAtOrBelowMagnitude,
   projectCelestial,
   setEquatorialCoordinates,
@@ -77,10 +81,9 @@ test("static export renders the AstroShot shell and controls", async () => {
   assert.match(html, />Long exposure</);
   assert.match(html, /aria-expanded="false"/);
   assert.match(html, /aria-label="Switch to Chinese"/);
-  assert.match(
-    html,
-    /href="https:\/\/github\.com\/CatsJuice\/astro-shot"[^>]*aria-label="View project on GitHub"/,
-  );
+  assert.doesNotMatch(html, /github-link|github\.com\/CatsJuice\/astro-shot/);
+  assert.match(html, /Add custom location/);
+  assert.match(html, /Use current location/);
   assert.doesNotMatch(html, />LIVE</);
   assert.doesNotMatch(html, /夜航|NIGHTFALL|拖拽观察天穹| FPS/);
   assert.doesNotMatch(html, /Your site is taking shape|Building your site/);
@@ -309,10 +312,27 @@ test("opening fireball stays near center and travels down-right", () => {
 
 test("compiled locale defaults remain overridable by saved preference", () => {
   assert.equal(resolveInitialLocale(null, "en"), "en");
-  assert.equal(resolveInitialLocale(null, "zh-CN"), "zh-CN");
-  assert.equal(resolveInitialLocale("en", "zh-CN"), "en");
-  assert.equal(resolveInitialLocale("zh-CN", "en"), "zh-CN");
-  assert.equal(resolveInitialLocale("invalid", "zh-CN"), "zh-CN");
+  assert.equal(resolveInitialLocale(null, "zh-TW"), "zh-TW");
+  assert.equal(resolveInitialLocale("en", "zh-TW"), "en");
+  assert.equal(resolveInitialLocale("zh-TW", "en"), "zh-TW");
+  assert.equal(resolveInitialLocale("zh-CN", "en"), "zh-TW");
+  assert.equal(resolveInitialLocale(null, "zh-CN"), "zh-TW");
+  assert.equal(resolveInitialLocale("invalid", "zh-TW"), "zh-TW");
+});
+
+test("custom observing coordinates enforce geographic bounds", () => {
+  assert.equal(isValidLatitude(25.033), true);
+  assert.equal(isValidLatitude(-90), true);
+  assert.equal(isValidLatitude(90), true);
+  assert.equal(isValidLatitude(-90.01), false);
+  assert.equal(isValidLatitude(90.01), false);
+  assert.equal(isValidLatitude(Number.NaN), false);
+  assert.equal(isValidLongitude(121.5654), true);
+  assert.equal(isValidLongitude(-180), true);
+  assert.equal(isValidLongitude(180), true);
+  assert.equal(isValidLongitude(-180.01), false);
+  assert.equal(isValidLongitude(180.01), false);
+  assert.equal(isValidLongitude(Number.POSITIVE_INFINITY), false);
 });
 
 test("XHS build compiles with Chinese as its default locale", async () => {
@@ -322,7 +342,7 @@ test("XHS build compiles with Chinese as its default locale", async () => {
   );
   assert.match(
     config,
-    /"process\.env\.NEXT_PUBLIC_DEFAULT_LOCALE": JSON\.stringify\("zh-CN"\)/,
+    /"process\.env\.NEXT_PUBLIC_DEFAULT_LOCALE": JSON\.stringify\("zh-TW"\)/,
   );
 });
 
@@ -430,7 +450,7 @@ test("ships a real catalog and the temporal rendering systems", async () => {
   assert.match(source, /globalCompositeOperation = "lighter"/);
   assert.match(source, /useState\(false\)/);
   assert.match(source, /<LiquidGlassMenu/);
-  assert.match(source, /type Locale = "zh-CN" \| "en"/);
+  assert.match(source, /locale === "zh-TW"/);
   assert.match(source, /AstroShot · Real Sky &amp; Meteor Simulator|AstroShot · Real Sky & Meteor Simulator/);
   assert.match(source, /window\.localStorage\.setItem\("sky-locale"/);
   assert.match(source, /<details className="section">/);

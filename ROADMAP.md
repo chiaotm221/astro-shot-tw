@@ -25,11 +25,15 @@ Status: implemented, pending full local runtime verification.
 
 ### V1.2 — Traditional Chinese Localization
 
+Status: implemented, pending full local runtime verification.
+
 - Complete the Traditional Chinese interface.
 - Establish consistent translation keys and Taiwan date/time formatting.
 - Preserve English as a supported locale.
 
 ### V1.3 — Custom Locations
+
+Status: implemented, pending full local runtime verification.
 
 - Accept validated latitude and longitude input.
 - Request browser geolocation only after explicit user action.
