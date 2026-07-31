@@ -65,6 +65,16 @@ npm test
 - Press `Escape` or click outside the panel to close it.
 - Use the language switch in the panel to change between Chinese and English.
 
+## Documentation
+
+- [AI Developer Guide](AI_DEVELOPER_GUIDE.md): workflow and constraints for AI
+  development agents.
+- [Architecture](ARCHITECTURE.md): current system structure and data flows.
+- [Roadmap](ROADMAP.md): long-term product direction and release sequence.
+- [Contributing](CONTRIBUTING.md): local development and review process.
+- [Changelog](CHANGELOG.md): completed release changes.
+- [Release Plans](docs/PLAN/): detailed scope and acceptance criteria by version.
+
 ## Data and Acknowledgments
 
 Star data comes from
