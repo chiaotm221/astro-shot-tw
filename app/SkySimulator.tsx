@@ -10,6 +10,7 @@ import {
   type SetStateAction,
 } from "react";
 import { CameraSystem } from "./CameraSystem";
+import { ObservingSiteSelector } from "./components/ObservingSiteSelector";
 import { LiquidGlassMenu } from "./LiquidGlassMenu";
 import {
   firstStarAtOrBelowMagnitude,
@@ -41,6 +42,18 @@ import {
   type Settings,
   type View,
 } from "./simulation/settings";
+import {
+  DEFAULT_OBSERVING_SITE,
+  getObservingSiteById,
+  OBSERVING_SITES,
+  type ObservingSite,
+} from "./simulation/observing-sites";
+
+const OBSERVING_SITE_STORAGE_KEY = "astro-shot-observing-site";
+const INITIAL_SETTINGS: Settings = {
+  ...DEFAULT_SETTINGS,
+  latitude: DEFAULT_OBSERVING_SITE.latitude,
+};
 
 type CatalogRow = [
   rightAscension: number,
@@ -1560,6 +1573,8 @@ function MeteorRatioControl({
 function SettingsPanel({
   settings,
   setSettings,
+  selectedSite,
+  onObservingSiteChange,
   catalogCount,
   catalogReady,
   locale,
@@ -1567,6 +1582,8 @@ function SettingsPanel({
 }: {
   settings: Settings;
   setSettings: Dispatch<SetStateAction<Settings>>;
+  selectedSite: ObservingSite;
+  onObservingSiteChange: (siteId: string) => void;
   catalogCount: number;
   catalogReady: boolean;
   locale: Locale;
@@ -1626,24 +1643,29 @@ function SettingsPanel({
           <span className="section-chevron" aria-hidden="true" />
         </summary>
         <div className="section-content">
+          <ObservingSiteSelector
+            sites={OBSERVING_SITES}
+            selectedSite={selectedSite}
+            onChange={onObservingSiteChange}
+          />
           <RangeControl
-          label={copy.rotation}
-          value={settings.rotationSpeed}
-          min={0}
-          max={720}
-          step={1}
-          display={`${settings.rotationSpeed}×`}
-          onChange={(value) => update("rotationSpeed", value)}
-        />
-        <RangeControl
-          label={copy.latitude}
-          value={settings.latitude}
-          min={-70}
-          max={70}
-          step={0.1}
-          display={`${Math.abs(settings.latitude).toFixed(1)}°${settings.latitude >= 0 ? "N" : "S"}`}
-          onChange={(value) => update("latitude", value)}
-        />
+            label={copy.rotation}
+            value={settings.rotationSpeed}
+            min={0}
+            max={720}
+            step={1}
+            display={`${settings.rotationSpeed}×`}
+            onChange={(value) => update("rotationSpeed", value)}
+          />
+          <RangeControl
+            label={copy.latitude}
+            value={settings.latitude}
+            min={-70}
+            max={70}
+            step={0.1}
+            display={`${Math.abs(settings.latitude).toFixed(1)}°${settings.latitude >= 0 ? "N" : "S"}`}
+            onChange={(value) => update("latitude", value)}
+          />
         <RangeControl
           label={copy.skyBrightness}
           value={settings.skyBrightness}
@@ -1877,9 +1899,11 @@ function SettingsPanel({
 
 export function SkySimulator() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const settingsRef = useRef(DEFAULT_SETTINGS);
+  const settingsRef = useRef(INITIAL_SETTINGS);
+  const observingLongitudeRef = useRef(DEFAULT_OBSERVING_SITE.longitude);
   const interactionLockedRef = useRef(false);
-  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState(INITIAL_SETTINGS);
+  const [selectedSite, setSelectedSite] = useState(DEFAULT_OBSERVING_SITE);
   const [panelOpen, setPanelOpen] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
   const [captureLocked, setCaptureLocked] = useState(false);
@@ -1887,6 +1911,36 @@ export function SkySimulator() {
   const [catalogCount, setCatalogCount] = useState(0);
   const [catalogReady, setCatalogReady] = useState(false);
   const copy = UI_COPY[locale];
+
+  const selectObservingSite = useCallback((siteId: string, persist = true) => {
+    const site = getObservingSiteById(siteId);
+    setSelectedSite(site);
+    setSettings((current) => ({ ...current, latitude: site.latitude }));
+    observingLongitudeRef.current = site.longitude;
+    if (persist) {
+      try {
+        window.localStorage.setItem(OBSERVING_SITE_STORAGE_KEY, site.id);
+      } catch {
+        // Storage availability must not block the simulator.
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    let storedSiteId: string | null = null;
+    try {
+      storedSiteId = window.localStorage.getItem(OBSERVING_SITE_STORAGE_KEY);
+    } catch {
+      // Use the default site when storage is unavailable.
+    }
+    if (!storedSiteId) return;
+    const restoredSiteId = storedSiteId;
+    const siteTimer = window.setTimeout(
+      () => selectObservingSite(restoredSiteId, false),
+      0,
+    );
+    return () => window.clearTimeout(siteTimer);
+  }, [selectObservingSite]);
 
   useEffect(() => {
     const storedLocale = window.localStorage.getItem("sky-locale");
@@ -1933,7 +1987,8 @@ export function SkySimulator() {
     let deviceScale = 1;
     let animationFrame = 0;
     let stars: RenderStar[] = [];
-    let sidereal = currentSiderealAngle();
+    let observerLongitude = observingLongitudeRef.current;
+    let sidereal = currentSiderealAngle(observerLongitude);
     let previousTime = performance.now() / 1000;
     let nextMeteorTime = previousTime + 0.75;
     let openingFireballTime = Number.POSITIVE_INFINITY;
@@ -2623,6 +2678,15 @@ export function SkySimulator() {
       const settingsNow = settingsRef.current;
       const delta = settingsNow.paused ? 0 : rawDelta;
       previousTime = now;
+      const nextObserverLongitude = observingLongitudeRef.current;
+      if (nextObserverLongitude !== observerLongitude) {
+        sidereal =
+          (sidereal +
+            (nextObserverLongitude - observerLongitude) * DEG +
+            TAU) %
+          TAU;
+        observerLongitude = nextObserverLongitude;
+      }
       sidereal = (sidereal + SIDEREAL_RATE * settingsNow.rotationSpeed * delta) % TAU;
 
       const basis = basisForView(view);
@@ -2696,6 +2760,8 @@ export function SkySimulator() {
           <SettingsPanel
             settings={settings}
             setSettings={setSettings}
+            selectedSite={selectedSite}
+            onObservingSiteChange={selectObservingSite}
             catalogCount={catalogCount}
             catalogReady={catalogReady}
             locale={locale}
