@@ -29,6 +29,11 @@ import {
   searchCelestialObjects,
 } from "../app/simulation/object-search.ts";
 import { CELESTIAL_OBJECTS } from "../app/simulation/celestial-objects.ts";
+import {
+  calculateMoonPosition,
+  findMoonRiseAndSet,
+  moonPhaseKey,
+} from "../app/simulation/moon.ts";
 
 test("object search normalizes aliases and localized names", () => {
   const index = createObjectSearchIndex(CELESTIAL_OBJECTS);
@@ -36,6 +41,16 @@ test("object search normalizes aliases and localized names", () => {
   assert.equal(searchCelestialObjects("天狼", 8, index)[0]?.id, "sirius");
   assert.equal(searchCelestialObjects("m 42", 8, index)[0]?.id, "orion-nebula");
   assert.equal(searchCelestialObjects("BIG-DIPPER", 8, index)[0]?.id, "ursa-major");
+});
+
+test("moon calculations preserve phase and event invariants", () => {
+  const knownNewMoon = Date.UTC(2024, 3, 8, 18, 21);
+  const moon = calculateMoonPosition(knownNewMoon);
+  assert.ok(moon.illuminatedFraction < 0.08);
+  assert.equal(moonPhaseKey(moon.ageDays), "new");
+  const events = findMoonRiseAndSet(knownNewMoon, 23.5, 121);
+  assert.ok(events.rise === null || events.rise > knownNewMoon);
+  assert.ok(events.set === null || events.set > knownNewMoon);
 });
 
 async function render() {

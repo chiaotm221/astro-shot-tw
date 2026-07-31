@@ -14,6 +14,7 @@ import { CameraSystem } from "./CameraSystem";
 import { ObservingSiteSelector } from "./components/ObservingSiteSelector";
 import { ObjectSearch } from "./components/ObjectSearch";
 import { ObjectInfoCard } from "./components/ObjectInfoCard";
+import { MoonConditions } from "./components/MoonConditions";
 import { TonightRecommendations } from "./components/TonightRecommendations";
 import { LiquidGlassMenu } from "./LiquidGlassMenu";
 import {
@@ -1688,6 +1689,7 @@ function SettingsPanel({
   sites,
   onSaveCustomSite,
   siderealRef,
+  simulationTimeRef,
   catalogCount,
   catalogReady,
   locale,
@@ -1700,6 +1702,7 @@ function SettingsPanel({
   sites: readonly ObservingSite[];
   onSaveCustomSite: (name: string, latitude: number, longitude: number) => void;
   siderealRef: RefObject<number>;
+  simulationTimeRef: RefObject<number>;
   catalogCount: number;
   catalogReady: boolean;
   locale: Locale;
@@ -1736,6 +1739,16 @@ function SettingsPanel({
           </button>
         </div>
       </div>
+
+      <details className="section">
+        <summary className="section-toggle">
+          <span>{locale === "zh-TW" ? "月相與月光" : "Moon & Moonlight"}</span>
+          <span className="section-chevron" aria-hidden="true" />
+        </summary>
+        <div className="section-content">
+          <MoonConditions simulationTimeRef={simulationTimeRef} latitude={settings.latitude} longitude={selectedSite.longitude} locale={locale} />
+        </div>
+      </details>
 
       <details className="section">
         <summary className="section-toggle">
@@ -2036,6 +2049,7 @@ export function SkySimulator() {
   const siderealRef = useRef(
     currentSiderealAngle(DEFAULT_OBSERVING_SITE.longitude),
   );
+  const simulationTimeRef = useRef(0);
   const interactionLockedRef = useRef(false);
   const [settings, setSettings] = useState(INITIAL_SETTINGS);
   const [selectedSite, setSelectedSite] = useState(DEFAULT_OBSERVING_SITE);
@@ -2192,6 +2206,7 @@ export function SkySimulator() {
     const context = canvas.getContext("2d", { alpha: false });
     if (!context) return;
 
+    if (simulationTimeRef.current === 0) simulationTimeRef.current = Date.now();
     let width = 0;
     let height = 0;
     let deviceScale = 1;
@@ -3008,6 +3023,7 @@ export function SkySimulator() {
       }
       sidereal = (sidereal + SIDEREAL_RATE * settingsNow.rotationSpeed * delta) % TAU;
       siderealRef.current = sidereal;
+      simulationTimeRef.current += delta * settingsNow.rotationSpeed * 1000;
 
       if (focusAnimation) {
         const progress = clamp((now - focusAnimation.startedAt) / 0.72, 0, 1);
@@ -3138,6 +3154,7 @@ export function SkySimulator() {
             sites={[...OBSERVING_SITES, ...customSites]}
             onSaveCustomSite={saveCustomSite}
             siderealRef={siderealRef}
+            simulationTimeRef={simulationTimeRef}
             catalogCount={catalogCount}
             catalogReady={catalogReady}
             locale={locale}
