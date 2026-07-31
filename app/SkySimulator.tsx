@@ -17,6 +17,7 @@ import { ObjectSearch } from "./components/ObjectSearch";
 import { ObjectInfoCard } from "./components/ObjectInfoCard";
 import { MoonConditions } from "./components/MoonConditions";
 import { MilkyWayPlanner } from "./components/MilkyWayPlanner";
+import { TaiwanObservingMap } from "./components/TaiwanObservingMap";
 import { TonightRecommendations } from "./components/TonightRecommendations";
 import { LiquidGlassMenu } from "./LiquidGlassMenu";
 import {
@@ -1808,6 +1809,16 @@ function SettingsPanel({
           </button>
         </div>
       </div>
+
+      <details className="section">
+        <summary className="section-toggle">
+          <span>{locale === "zh-TW" ? "台灣觀星地圖" : "Taiwan Observing Map"}</span>
+          <span className="section-chevron" aria-hidden="true" />
+        </summary>
+        <div className="section-content">
+          <TaiwanObservingMap sites={sites} selectedSite={selectedSite} onChange={onObservingSiteChange} locale={locale} />
+        </div>
+      </details>
 
       <details className="section">
         <summary className="section-toggle">

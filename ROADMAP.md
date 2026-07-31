@@ -95,6 +95,9 @@ Status: V3.2 Phase 1 implemented, pending full browser verification.
 
 ### V4.x
 
+Status: V4.0 Phase 1 static Taiwan observing map implemented, pending full
+browser verification and sourced expansion.
+
 - Taiwan observing-site map and static site information.
 - Weather, cloud cover, and observing-condition summaries.
 - Light-pollution data with explicit source dates and limitations.

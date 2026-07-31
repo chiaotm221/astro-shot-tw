@@ -43,6 +43,8 @@ import {
   solarEventsForLocalDay,
   startOfLocalDay,
 } from "../app/simulation/time-events.ts";
+import { OBSERVING_SITE_DETAILS } from "../app/simulation/observing-site-details.ts";
+import { OBSERVING_SITES } from "../app/simulation/observing-sites.ts";
 
 test("object search normalizes aliases and localized names", () => {
   const index = createObjectSearchIndex(CELESTIAL_OBJECTS);
@@ -82,6 +84,16 @@ test("overnight timeline orders sunset, midnight, and following sunrise", () => 
   assert.ok(events.sunset < events.astronomicalDusk);
   assert.ok(events.astronomicalDusk < events.midnight);
   assert.ok(events.midnight < events.sunrise);
+});
+
+test("bundled Taiwan observing sites have complete static planning details", () => {
+  for (const site of OBSERVING_SITES) {
+    const details = OBSERVING_SITE_DETAILS[site.id];
+    assert.ok(details, `missing details for ${site.id}`);
+    assert.ok(details.lightPollution.en.length > 0);
+    assert.ok(details.horizon["zh-TW"].length > 0);
+    assert.ok(site.elevationMeters >= 0);
+  }
 });
 
 async function render() {
