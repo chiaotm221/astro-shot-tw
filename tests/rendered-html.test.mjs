@@ -65,6 +65,10 @@ import {
   exifFieldMatches,
 } from "../app/simulation/photo-alignment.ts";
 import { trailSampleIntervalSeconds } from "../app/simulation/photo-preview.ts";
+import {
+  buildPhotographyPlanExport,
+  externalAiHandoffPrompt,
+} from "../app/simulation/plan-export.ts";
 
 test("object search normalizes aliases and localized names", () => {
   const index = createObjectSearchIndex(CELESTIAL_OBJECTS);
@@ -181,6 +185,21 @@ test("star-trail sampling stays bounded as preview duration changes", () => {
   assert.equal(trailSampleIntervalSeconds(5), 2.5);
   assert.equal(trailSampleIntervalSeconds(30), 15);
   assert.ok(trailSampleIntervalSeconds(120) > trailSampleIntervalSeconds(30));
+});
+
+test("photography-plan export is versioned and excludes image payloads", () => {
+  const plan = buildPhotographyPlanExport({
+    simulationTime: "2026-07-15T12:00:00.000Z",
+    site: { name: "Test", latitude: 23.5, longitude: 121, elevationMeters: 1000 },
+    camera: DEFAULT_PHOTOGRAPHY_PLAN,
+    originalExif: null,
+    confirmedCapture: null,
+    preview: { enabled: true, mode: "stars", opacity: 0.7, trailMinutes: 30 },
+  }, "2026-01-01T00:00:00.000Z");
+  assert.equal(plan.schema, "astro-shot/photography-plan");
+  assert.equal(plan.version, 1);
+  assert.doesNotMatch(JSON.stringify(plan), /data:image|blob:/);
+  assert.match(externalAiHandoffPrompt(plan), /immutable foreground/);
 });
 
 async function render() {

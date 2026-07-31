@@ -24,6 +24,7 @@ import { PhotographyFrame, PhotographyPlanner } from "./components/PhotographyPl
 import { PhotoImport, type ImportedPhoto } from "./components/PhotoImport";
 import { AlignedPhotoOverlay, PhotoAlignmentControls } from "./components/PhotoAlignment";
 import { PhotoSkyOverlay, PhotoSkyPreviewControls } from "./components/PhotoSkyPreview";
+import { PlanExport } from "./components/PlanExport";
 import { TonightRecommendations } from "./components/TonightRecommendations";
 import { LiquidGlassMenu } from "./LiquidGlassMenu";
 import {
@@ -1783,6 +1784,7 @@ function SettingsPanel({
   onClearPhoto,
   photoPreview,
   setPhotoPreview,
+  sourceCanvasRef,
 }: {
   settings: Settings;
   setSettings: Dispatch<SetStateAction<Settings>>;
@@ -1806,6 +1808,7 @@ function SettingsPanel({
   onClearPhoto: () => void;
   photoPreview: PhotoPreviewSettings;
   setPhotoPreview: Dispatch<SetStateAction<PhotoPreviewSettings>>;
+  sourceCanvasRef: RefObject<HTMLCanvasElement | null>;
 }) {
   const copy = UI_COPY[locale];
   const update = useCallback(
@@ -1838,6 +1841,16 @@ function SettingsPanel({
           </button>
         </div>
       </div>
+
+      <details className="section">
+        <summary className="section-toggle">
+          <span>{locale === "zh-TW" ? "方案與預覽匯出" : "Plan & Preview Export"}</span>
+          <span className="section-chevron" aria-hidden="true" />
+        </summary>
+        <div className="section-content">
+          <PlanExport photo={importedPhoto} alignment={photoAlignment} camera={photographyPlan} preview={photoPreview} site={selectedSite} simulationTimeRef={simulationTimeRef} sourceCanvasRef={sourceCanvasRef} locale={locale} />
+        </div>
+      </details>
 
       <details className="section">
         <summary className="section-toggle">
@@ -3389,6 +3402,7 @@ export function SkySimulator() {
             onClearPhoto={() => setImportedPhoto(null)}
             photoPreview={photoPreview}
             setPhotoPreview={setPhotoPreview}
+            sourceCanvasRef={canvasRef}
           />
         </div>
       </LiquidGlassMenu>

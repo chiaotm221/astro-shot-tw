@@ -122,6 +122,9 @@ pending full browser and real-photo verification.
 V5.3 Phase 1 local star, Milky Way, and simulation-time star-trail overlays
 implemented, pending full browser, visual, and performance verification.
 
+V5.4 Phase 1 local plan/preview export and consent-gated provider-neutral AI
+handoff implemented. No provider upload is configured.
+
 - Photo selection and aligned sky or star-trail simulation using available
   EXIF plus user-confirmed GPS, approximate elevation, direction, orientation,
   focal length, and manual correction.
