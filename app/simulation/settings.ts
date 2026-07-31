@@ -22,6 +22,9 @@ export type Settings = {
   meteorAngle: number;
   directionSpread: number;
   paused: boolean;
+  constellationLines: boolean;
+  constellationLabels: boolean;
+  constellationScope: "primary" | "all";
 };
 
 export type View = {
@@ -52,6 +55,9 @@ export const DEFAULT_SETTINGS: Settings = {
   meteorAngle: 11,
   directionSpread: 118,
   paused: false,
+  constellationLines: true,
+  constellationLabels: true,
+  constellationScope: "primary",
 };
 
 export const DEFAULT_VIEW: View = {

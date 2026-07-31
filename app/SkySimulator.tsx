@@ -56,6 +56,7 @@ import {
   CELESTIAL_OBJECTS,
   type CelestialObject,
 } from "./simulation/celestial-objects";
+import { CONSTELLATION_FIGURES } from "./simulation/constellations";
 
 const OBSERVING_SITE_STORAGE_KEY = "astro-shot-observing-site";
 const CUSTOM_SITES_STORAGE_KEY = "astro-shot-custom-observing-sites";
@@ -1738,6 +1739,27 @@ function SettingsPanel({
 
       <details className="section">
         <summary className="section-toggle">
+          <span>{locale === "zh-TW" ? "星座顯示" : "Constellations"}</span>
+          <span className="section-chevron" aria-hidden="true" />
+        </summary>
+        <div className="section-content">
+          <div className="toggle-control">
+            <span><strong>{locale === "zh-TW" ? "星座連線" : "Constellation lines"}</strong><small>{locale === "zh-TW" ? "顯示星座辨識線" : "Show constellation figures"}</small></span>
+            <button type="button" className={`noise-toggle${settings.constellationLines ? " active" : ""}`} aria-pressed={settings.constellationLines} onClick={() => update("constellationLines", !settings.constellationLines)}>{settings.constellationLines ? "ON" : "OFF"}</button>
+          </div>
+          <div className="toggle-control">
+            <span><strong>{locale === "zh-TW" ? "星座名稱" : "Constellation names"}</strong><small>{locale === "zh-TW" ? "顯示本地化名稱" : "Show localized labels"}</small></span>
+            <button type="button" className={`noise-toggle${settings.constellationLabels ? " active" : ""}`} aria-pressed={settings.constellationLabels} onClick={() => update("constellationLabels", !settings.constellationLabels)}>{settings.constellationLabels ? "ON" : "OFF"}</button>
+          </div>
+          <div className="constellation-scope" role="group" aria-label={locale === "zh-TW" ? "星座顯示範圍" : "Constellation display scope"}>
+            {(["primary", "all"] as const).map((scope) => <button key={scope} type="button" className={settings.constellationScope === scope ? "active" : ""} aria-pressed={settings.constellationScope === scope} onClick={() => update("constellationScope", scope)}>{locale === "zh-TW" ? (scope === "primary" ? "主要星座" : "全部星座") : (scope === "primary" ? "Primary" : "All")}</button>)}
+          </div>
+          <p className="constellation-note">{locale === "zh-TW" ? "連線為辨識用示意，不代表星座官方邊界。" : "Figures are identification guides, not official constellation boundaries."}</p>
+        </div>
+      </details>
+
+      <details className="section">
+        <summary className="section-toggle">
           <span>{locale === "zh-TW" ? "搜尋星體" : "Object Search"}</span>
           <span className="section-chevron" aria-hidden="true" />
         </summary>
@@ -2009,6 +2031,7 @@ function SettingsPanel({
 export function SkySimulator() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const settingsRef = useRef(INITIAL_SETTINGS);
+  const localeRef = useRef<Locale>(defaultLocale);
   const observingLongitudeRef = useRef(DEFAULT_OBSERVING_SITE.longitude);
   const siderealRef = useRef(
     currentSiderealAngle(DEFAULT_OBSERVING_SITE.longitude),
@@ -2138,6 +2161,10 @@ export function SkySimulator() {
   useEffect(() => {
     settingsRef.current = settings;
   }, [settings]);
+
+  useEffect(() => {
+    localeRef.current = locale;
+  }, [locale]);
 
   useEffect(() => {
     const selectObject = (event: Event) => {
@@ -2739,6 +2766,41 @@ export function SkySimulator() {
       return visibleCount;
     };
 
+    const constellationPointA: ProjectedCelestial = { x: 0, y: 0, altitude: 0, depth: 0 };
+    const constellationPointB: ProjectedCelestial = { x: 0, y: 0, altitude: 0, depth: 0 };
+    const drawConstellations = (basis: ReturnType<typeof basisForView>, focal: number, settingsNow: Settings) => {
+      if (!settingsNow.constellationLines && !settingsNow.constellationLabels) return;
+      const latitude = settingsNow.latitude * DEG;
+      const sinSidereal = Math.sin(sidereal);
+      const cosSidereal = Math.cos(sidereal);
+      const sinLatitude = Math.sin(latitude);
+      const cosLatitude = Math.cos(latitude);
+      context.save();
+      context.lineWidth = 0.8;
+      context.strokeStyle = "rgba(142, 177, 220, 0.34)";
+      context.fillStyle = "rgba(187, 210, 238, 0.68)";
+      context.font = "500 10px system-ui, sans-serif";
+      context.textAlign = "center";
+      for (const figure of CONSTELLATION_FIGURES) {
+        if (settingsNow.constellationScope === "primary" && !figure.primary) continue;
+        if (settingsNow.constellationLines) {
+          context.beginPath();
+          for (const [fromIndex, toIndex] of figure.segments) {
+            const fromVisible = projectCelestial(figure.points[fromIndex], sinSidereal, cosSidereal, sinLatitude, cosLatitude, basis, focal, width, height, constellationPointA);
+            const toVisible = projectCelestial(figure.points[toIndex], sinSidereal, cosSidereal, sinLatitude, cosLatitude, basis, focal, width, height, constellationPointB);
+            if (!fromVisible || !toVisible) continue;
+            context.moveTo(constellationPointA.x, constellationPointA.y);
+            context.lineTo(constellationPointB.x, constellationPointB.y);
+          }
+          context.stroke();
+        }
+        if (settingsNow.constellationLabels && projectCelestial(figure.points[figure.labelIndex], sinSidereal, cosSidereal, sinLatitude, cosLatitude, basis, focal, width, height, constellationPointA)) {
+          if (constellationPointA.x >= -40 && constellationPointA.x <= width + 40 && constellationPointA.y >= -30 && constellationPointA.y <= height + 30) context.fillText(figure.name[localeRef.current], constellationPointA.x, constellationPointA.y - 13);
+        }
+      }
+      context.restore();
+    };
+
     const drawHorizon = (focal: number) => {
       const horizonY = height * 0.5 + Math.tan(view.altitude) * focal;
       if (horizonY > height + 150) return;
@@ -2957,6 +3019,7 @@ export function SkySimulator() {
       const basis = basisForView(view);
       const focal = height / (2 * Math.tan(view.fov * 0.5));
       drawBackground(basis, focal, settingsNow);
+      drawConstellations(basis, focal, settingsNow);
       drawStars(basis, focal, settingsNow, now);
       updateMeteors(delta, now, settingsNow);
       for (const meteor of meteors) {

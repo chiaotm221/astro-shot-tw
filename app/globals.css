@@ -1157,6 +1157,38 @@ button {
   color: var(--glass-foreground);
 }
 
+.constellation-scope {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin: 8px -10px 0;
+}
+
+.constellation-scope button {
+  min-height: 36px;
+  border: 1px solid rgba(245, 247, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(245, 247, 255, 0.07);
+  color: var(--glass-foreground);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.constellation-scope button:hover,
+.constellation-scope button.active {
+  background: rgba(245, 247, 255, 0.17);
+}
+
+.constellation-scope button.active { border-color: rgba(245, 247, 255, 0.32); }
+
+.constellation-note {
+  margin: 10px 2px 0;
+  color: var(--glass-muted);
+  font-size: 9px;
+  line-height: 1.45;
+}
+
 .demo-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;

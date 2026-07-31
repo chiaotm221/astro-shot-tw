@@ -72,6 +72,8 @@ transit and set times remain follow-up work.
 
 ### V2.3 — Constellations
 
+Status: Phase 1 implemented, pending full browser and visual verification.
+
 - Add constellation lines and localized labels.
 - Preprocess line data and avoid expensive per-frame matching.
 
