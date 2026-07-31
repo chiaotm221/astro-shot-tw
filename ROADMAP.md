@@ -89,6 +89,8 @@ Status: V3.1 Phase 1 implemented, pending authoritative comparison and full
 browser verification.
 
 - Milky Way core direction and photography windows.
+Status: V3.2 Phase 1 implemented, pending full browser verification.
+
 - An overnight timeline with pause, playback, and time acceleration.
 
 ### V4.x

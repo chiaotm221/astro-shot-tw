@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type Dispatch,
@@ -39,7 +40,6 @@ import type { Locale } from "./i18n/types";
 import {
   currentSiderealAngle,
   DEG,
-  SIDEREAL_RATE,
   TAU,
 } from "./simulation/astronomy-time";
 import {
@@ -59,6 +59,11 @@ import {
   type CelestialObject,
 } from "./simulation/celestial-objects";
 import { CONSTELLATION_FIGURES } from "./simulation/constellations";
+import {
+  localDateInputValue,
+  solarEventsForLocalDay,
+  startOfLocalDay,
+} from "./simulation/time-events";
 
 const OBSERVING_SITE_STORAGE_KEY = "astro-shot-observing-site";
 const CUSTOM_SITES_STORAGE_KEY = "astro-shot-custom-observing-sites";
@@ -1589,6 +1594,9 @@ function TimeSimulationMenu({
   onOpenChange,
   locale,
   disabled,
+  simulationTimeRef,
+  latitude,
+  longitude,
 }: {
   settings: Settings;
   setSettings: Dispatch<SetStateAction<Settings>>;
@@ -1596,7 +1604,11 @@ function TimeSimulationMenu({
   onOpenChange: (open: boolean) => void;
   locale: Locale;
   disabled: boolean;
+  simulationTimeRef: RefObject<number>;
+  latitude: number;
+  longitude: number;
 }) {
+  const [displayTime, setDisplayTime] = useState(() => Date.now());
   const copy = locale === "zh-TW"
     ? {
         title: "時間模擬",
@@ -1607,6 +1619,12 @@ function TimeSimulationMenu({
         stopped: "模擬已停止",
         start: "開始模擬",
         stop: "停止模擬",
+        date: "模擬日期",
+        timeline: "整日時間軸",
+        sunset: "日落",
+        darkness: "天文暮光結束",
+        midnight: "午夜",
+        sunrise: "日出",
       }
     : {
         title: "Time Simulation",
@@ -1617,7 +1635,36 @@ function TimeSimulationMenu({
         stopped: "Simulation stopped",
         start: "Start simulation",
         stop: "Stop simulation",
+        date: "Simulation date",
+        timeline: "24-hour timeline",
+        sunset: "Sunset",
+        darkness: "Astronomical dusk",
+        midnight: "Midnight",
+        sunrise: "Sunrise",
       };
+
+  useEffect(() => {
+    if (!open) return;
+    const update = () => setDisplayTime(simulationTimeRef.current || Date.now());
+    update();
+    const timer = window.setInterval(update, 500);
+    return () => window.clearInterval(timer);
+  }, [open, simulationTimeRef]);
+
+  const dayStart = startOfLocalDay(displayTime);
+  const events = useMemo(
+    () => solarEventsForLocalDay(dayStart, latitude, longitude),
+    [dayStart, latitude, longitude],
+  );
+  const seek = (timestamp: number | null) => {
+    if (timestamp === null) return;
+    simulationTimeRef.current = timestamp;
+    setDisplayTime(timestamp);
+  };
+  const timeFormatter = useMemo(
+    () => new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }),
+    [locale],
+  );
 
   const update = <Key extends keyof Settings>(key: Key, value: Settings[Key]) =>
     setSettings((current) => ({ ...current, [key]: value }));
@@ -1642,6 +1689,27 @@ function TimeSimulationMenu({
             display={`${settings.rotationSpeed}×`}
             onChange={(value) => update("rotationSpeed", value)}
           />
+          <div className="simulation-datetime">
+            <label><span>{copy.date}</span><input type="date" value={localDateInputValue(displayTime)} onChange={(event) => {
+              const [year, month, day] = event.target.value.split("-").map(Number);
+              if (!year || !month || !day) return;
+              const current = new Date(displayTime);
+              seek(new Date(year, month - 1, day, current.getHours(), current.getMinutes(), current.getSeconds()).getTime());
+            }} /></label>
+            <strong>{timeFormatter.format(displayTime)}</strong>
+          </div>
+          <label className="simulation-timeline">
+            <span><span>{copy.timeline}</span><output>{timeFormatter.format(displayTime)}</output></span>
+            <input type="range" min={0} max={86400} step={60} value={Math.min(86399, Math.max(0, Math.round((displayTime - dayStart) / 1000)))} onChange={(event) => seek(dayStart + Number(event.target.value) * 1000)} />
+          </label>
+          <div className="simulation-event-jumps">
+            {[
+              [copy.sunset, events.sunset],
+              [copy.darkness, events.astronomicalDusk],
+              [copy.midnight, events.midnight],
+              [copy.sunrise, events.sunrise],
+            ].map(([label, timestamp]) => <button key={label as string} type="button" disabled={timestamp === null} onClick={() => seek(timestamp as number | null)}><span>{label}</span><small>{timestamp === null ? "—" : timeFormatter.format(timestamp as number)}</small></button>)}
+          </div>
           <div className="simulation-speed-presets" aria-label={copy.speed}>
             {[1, 60, 120, 360, 720].map((speed) => (
               <button
@@ -2223,8 +2291,7 @@ export function SkySimulator() {
     let deviceScale = 1;
     let animationFrame = 0;
     let stars: RenderStar[] = [];
-    let observerLongitude = observingLongitudeRef.current;
-    let sidereal = currentSiderealAngle(observerLongitude);
+    let sidereal = currentSiderealAngle(observingLongitudeRef.current);
     let previousTime = performance.now() / 1000;
     let nextMeteorTime = previousTime + 0.75;
     let openingFireballTime = Number.POSITIVE_INFINITY;
@@ -3023,18 +3090,12 @@ export function SkySimulator() {
       const settingsNow = settingsRef.current;
       const delta = settingsNow.paused ? 0 : rawDelta;
       previousTime = now;
-      const nextObserverLongitude = observingLongitudeRef.current;
-      if (nextObserverLongitude !== observerLongitude) {
-        sidereal =
-          (sidereal +
-            (nextObserverLongitude - observerLongitude) * DEG +
-            TAU) %
-          TAU;
-        observerLongitude = nextObserverLongitude;
-      }
-      sidereal = (sidereal + SIDEREAL_RATE * settingsNow.rotationSpeed * delta) % TAU;
-      siderealRef.current = sidereal;
       simulationTimeRef.current += delta * settingsNow.rotationSpeed * 1000;
+      sidereal = currentSiderealAngle(
+        observingLongitudeRef.current,
+        simulationTimeRef.current,
+      );
+      siderealRef.current = sidereal;
 
       if (focusAnimation) {
         const progress = clamp((now - focusAnimation.startedAt) / 0.72, 0, 1);
@@ -3132,6 +3193,9 @@ export function SkySimulator() {
         }}
         locale={locale}
         disabled={captureLocked}
+        simulationTimeRef={simulationTimeRef}
+        latitude={settings.latitude}
+        longitude={selectedSite.longitude}
       />
 
       {selectedObject && (

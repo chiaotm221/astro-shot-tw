@@ -39,6 +39,10 @@ import {
   planMilkyWay,
   solarAltitude,
 } from "../app/simulation/milky-way.ts";
+import {
+  solarEventsForLocalDay,
+  startOfLocalDay,
+} from "../app/simulation/time-events.ts";
 
 test("object search normalizes aliases and localized names", () => {
   const index = createObjectSearchIndex(CELESTIAL_OBJECTS);
@@ -67,6 +71,17 @@ test("Milky Way planner returns bounded coordinates and planning windows", () =>
   const plan = planMilkyWay(timestamp, 23.5, 121);
   assert.ok(plan.windowStart === null || plan.windowEnd > plan.windowStart);
   assert.ok(plan.best === null || plan.best.altitude >= 10);
+});
+
+test("overnight timeline orders sunset, midnight, and following sunrise", () => {
+  const dayStart = startOfLocalDay(new Date(2026, 6, 15, 12).getTime());
+  const events = solarEventsForLocalDay(dayStart, 23.5, 121);
+  assert.ok(events.sunset !== null);
+  assert.ok(events.astronomicalDusk !== null);
+  assert.ok(events.sunrise !== null);
+  assert.ok(events.sunset < events.astronomicalDusk);
+  assert.ok(events.astronomicalDusk < events.midnight);
+  assert.ok(events.midnight < events.sunrise);
 });
 
 async function render() {
