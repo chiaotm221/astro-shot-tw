@@ -1,3 +1,18 @@
+# V6.0
+
+## Added
+
+- Installable PWA manifest and Apple web-app metadata
+- Service worker caching for the application shell, star catalog, Milky Way
+  texture, and runtime assets
+- Offline connectivity status with continued access to local astronomy tools
+- Automated coverage for PWA assets and base-path deployments
+
+## Changed
+
+- Weather conditions now distinguish live data from offline cached data and
+  show the age of the last successful update
+
 # V2.0
 
 ## Added

@@ -230,6 +230,28 @@ async function readBuiltStyles(html, basePath) {
   return styles.join("\n");
 }
 
+test("static export includes installable and offline PWA assets", async () => {
+  const html = await render();
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+  const manifest = JSON.parse(await readFile(
+    new URL("../out/manifest.webmanifest", import.meta.url),
+    "utf8",
+  ));
+  const serviceWorker = await readFile(
+    new URL("../out/sw.js", import.meta.url),
+    "utf8",
+  );
+
+  assert.ok(html.includes(`href="${basePath}/manifest.webmanifest"`));
+  assert.equal(manifest.start_url, `${basePath}/`);
+  assert.equal(manifest.scope, `${basePath}/`);
+  assert.equal(manifest.display, "standalone");
+  assert.ok(manifest.icons.some((icon) => icon.sizes === "512x512"));
+  assert.match(serviceWorker, /data\/stars\.json/);
+  assert.match(serviceWorker, /request\.mode === "navigate"/);
+  assert.match(serviceWorker, /caches\.match/);
+});
+
 test("static export renders the AstroShot shell and controls", async () => {
   const html = await render();
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";

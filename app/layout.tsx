@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { PwaShell } from "./components/PwaShell";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3002";
@@ -10,6 +11,12 @@ export const metadata: Metadata = {
   title: "AstroShot · Real Sky & Meteor Simulator",
   description:
     "An interactive night-sky simulator built from a real star catalog, with atmospheric twinkle, Earth rotation, meteors, and fireballs.",
+  manifest: assetPath("/manifest.webmanifest"),
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "AstroShot",
+  },
   openGraph: {
     title: "AstroShot · Real Sky & Meteor Simulator",
     description:
@@ -65,7 +72,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">{children}<PwaShell /></body>
     </html>
   );
 }
