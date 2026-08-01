@@ -1,4 +1,4 @@
-# V7.0 Phase 1
+# V7.0 Phase 2
 
 ## Added
 
@@ -13,6 +13,9 @@
   and Tonight's Sky
 - Daily rise, transit, and set events in solar-system information cards
 - The first provenance-bearing six-body JPL Horizons observer fixture
+- Dynamic Moon and planet rendering and hit testing in the sky Canvas
+- Solar-system azimuth, elevation, illumination, and magnitude in plan exports
+- JPL Horizons rise, transit, and set fixture checks for the Moon and Jupiter
 
 # V6.2
 

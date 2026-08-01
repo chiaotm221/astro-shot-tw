@@ -65,8 +65,10 @@ import {
 } from "./simulation/observing-sites";
 import {
   CELESTIAL_OBJECTS,
+  SOLAR_SYSTEM_OBJECTS,
   type CelestialObject,
 } from "./simulation/celestial-objects";
+import { isEphemerisTimestampSupported, solarSystemPosition, type SolarSystemBodyId } from "./simulation/solar-system-ephemeris";
 import { CONSTELLATION_FIGURES } from "./simulation/constellations";
 import { DEFAULT_PHOTOGRAPHY_PLAN, type PhotographyPlan } from "./simulation/photography";
 import { alignmentFromExif, DEFAULT_PHOTO_ALIGNMENT, type PhotoAlignment } from "./simulation/photo-alignment";
@@ -2252,6 +2254,7 @@ export function SkySimulator() {
   const settingsRef = useRef(INITIAL_SETTINGS);
   const localeRef = useRef<Locale>(defaultLocale);
   const observingLongitudeRef = useRef(DEFAULT_OBSERVING_SITE.longitude);
+  const observingElevationRef = useRef(DEFAULT_OBSERVING_SITE.elevationMeters ?? 0);
   const siderealRef = useRef(
     currentSiderealAngle(DEFAULT_OBSERVING_SITE.longitude),
   );
@@ -2279,6 +2282,7 @@ export function SkySimulator() {
     setSelectedSite(site);
     setSettings((current) => ({ ...current, latitude: site.latitude }));
     observingLongitudeRef.current = site.longitude;
+    observingElevationRef.current = site.elevationMeters ?? 0;
   }, []);
 
   const importPhoto = useCallback((photo: ImportedPhoto) => {
@@ -2450,6 +2454,19 @@ export function SkySimulator() {
     let animationFrame = 0;
     let stars: RenderStar[] = [];
     let sidereal = currentSiderealAngle(observingLongitudeRef.current);
+    let solarObjectsUpdatedAt = Number.NEGATIVE_INFINITY;
+    let resolvedSolarObjects: CelestialObject[] = [];
+    const updateSolarObjects = (timestamp: number) => {
+      if (!isEphemerisTimestampSupported(timestamp)) { resolvedSolarObjects = []; return resolvedSolarObjects; }
+      if (Math.abs(timestamp - solarObjectsUpdatedAt) < 1000) return resolvedSolarObjects;
+      solarObjectsUpdatedAt = timestamp;
+      const observer = { latitude: settingsRef.current.latitude, longitude: observingLongitudeRef.current, elevationMeters: observingElevationRef.current };
+      resolvedSolarObjects = SOLAR_SYSTEM_OBJECTS.map((object) => {
+        const position = solarSystemPosition(object.id as SolarSystemBodyId, timestamp, observer);
+        return { ...object, rightAscension: position.apparentEquatorialOfDate.rightAscensionRadians, declination: position.apparentEquatorialOfDate.declinationRadians, magnitude: position.visualMagnitude };
+      });
+      return resolvedSolarObjects;
+    };
     let previousTime = performance.now() / 1000;
     let nextMeteorTime = previousTime + 0.75;
     let openingFireballTime = Number.POSITIVE_INFINITY;
@@ -2742,7 +2759,8 @@ export function SkySimulator() {
         const latitude = settingsRef.current.latitude * DEG;
         const projected: ProjectedCelestial = { x: 0, y: 0, altitude: 0, depth: 0 };
         let nearest: { object: CelestialObject; distance: number } | null = null;
-        for (const object of CELESTIAL_OBJECTS) {
+        const selectableObjects = [...CELESTIAL_OBJECTS.filter((object) => object.kind !== "planet"), ...updateSolarObjects(simulationTimeRef.current)];
+        for (const object of selectableObjects) {
           const coordinates = { equatorialX: 0, equatorialY: 0, equatorialZ: 0 };
           setEquatorialCoordinates(coordinates, object.rightAscension, object.declination);
           if (!projectCelestial(coordinates, Math.sin(sidereal), Math.cos(sidereal), Math.sin(latitude), Math.cos(latitude), basis, focal, width, height, projected)) continue;
@@ -3024,6 +3042,42 @@ export function SkySimulator() {
       return visibleCount;
     };
 
+    const solarSystemPoint: ProjectedCelestial = { x: 0, y: 0, altitude: 0, depth: 0 };
+    const solarSystemCoordinates = { equatorialX: 0, equatorialY: 0, equatorialZ: 0 };
+    const solarSystemColors: Record<string, [number, number, number]> = {
+      moon: [238, 242, 231], mercury: [203, 195, 179], venus: [255, 226, 166], mars: [242, 137, 91], jupiter: [237, 205, 166], saturn: [229, 207, 153],
+    };
+    const drawSolarSystem = (basis: ReturnType<typeof basisForView>, focal: number, settingsNow: Settings, timestamp: number) => {
+      const latitude = settingsNow.latitude * DEG;
+      const objects = updateSolarObjects(timestamp);
+      context.save();
+      context.textAlign = "center";
+      context.font = "500 10px system-ui, sans-serif";
+      for (const object of objects) {
+        setEquatorialCoordinates(solarSystemCoordinates, object.rightAscension, object.declination);
+        if (!projectCelestial(solarSystemCoordinates, Math.sin(sidereal), Math.cos(sidereal), Math.sin(latitude), Math.cos(latitude), basis, focal, width, height, solarSystemPoint)) continue;
+        if (solarSystemPoint.altitude < -0.018 || solarSystemPoint.x < -30 || solarSystemPoint.x > width + 30 || solarSystemPoint.y < -30 || solarSystemPoint.y > height + 30) continue;
+        const color = solarSystemColors[object.id] ?? [235, 235, 225];
+        const radius = object.id === "moon" ? 6.5 : Math.max(2.1, 3.8 - ((object.magnitude ?? 1) + 2) * 0.25);
+        const glowRadius = radius * (object.id === "moon" ? 3.2 : 3.8);
+        const glow = context.createRadialGradient(solarSystemPoint.x, solarSystemPoint.y, 0, solarSystemPoint.x, solarSystemPoint.y, glowRadius);
+        glow.addColorStop(0, `rgba(${color[0]},${color[1]},${color[2]},0.75)`);
+        glow.addColorStop(0.28, `rgba(${color[0]},${color[1]},${color[2]},0.2)`);
+        glow.addColorStop(1, `rgba(${color[0]},${color[1]},${color[2]},0)`);
+        context.fillStyle = glow;
+        context.beginPath();
+        context.arc(solarSystemPoint.x, solarSystemPoint.y, glowRadius, 0, TAU);
+        context.fill();
+        context.fillStyle = `rgb(${color[0]},${color[1]},${color[2]})`;
+        context.beginPath();
+        context.arc(solarSystemPoint.x, solarSystemPoint.y, radius, 0, TAU);
+        context.fill();
+        context.fillStyle = "rgba(224, 235, 245, 0.82)";
+        context.fillText(object.name[localeRef.current], solarSystemPoint.x, solarSystemPoint.y - glowRadius - 4);
+      }
+      context.restore();
+    };
+
     const constellationPointA: ProjectedCelestial = { x: 0, y: 0, altitude: 0, depth: 0 };
     const constellationPointB: ProjectedCelestial = { x: 0, y: 0, altitude: 0, depth: 0 };
     const drawConstellations = (basis: ReturnType<typeof basisForView>, focal: number, settingsNow: Settings) => {
@@ -3275,6 +3329,7 @@ export function SkySimulator() {
       drawBackground(basis, focal, settingsNow);
       drawConstellations(basis, focal, settingsNow);
       drawStars(basis, focal, settingsNow, now);
+      drawSolarSystem(basis, focal, settingsNow, simulationTimeRef.current);
       updateMeteors(delta, now, settingsNow);
       for (const meteor of meteors) {
         const projectedMeteor = projectMeteorForView(

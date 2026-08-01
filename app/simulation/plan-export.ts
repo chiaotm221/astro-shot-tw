@@ -18,6 +18,7 @@ export type PhotographyPlanExport = {
     moonAgeDays: number;
     weather: { fetchedAt: number; cloudCoverPercent: number; precipitationProbabilityPercent: number; humidityPercent: number; windSpeedKmh: number } | null;
     recommendedEquipment: string;
+    solarSystem?: Array<{ body: string; azimuthDegrees: number; elevationDegrees: number; illuminationPercent: number; visualMagnitude: number }>;
   };
   limitations: string[];
 };
@@ -109,6 +110,7 @@ export function printablePhotographyPlanHtml(plan: PhotographyPlanExport, locale
   const zh = locale === "zh-TW";
   const time = new Intl.DateTimeFormat(locale, { dateStyle: "full", timeStyle: "short" }).format(new Date(plan.simulationTime));
   const weather = plan.planning?.weather;
+  const visibleSolarSystem = plan.planning?.solarSystem?.filter((body) => body.elevationDegrees >= 0).map((body) => `${body.body} ${body.azimuthDegrees.toFixed(0)}°/${body.elevationDegrees.toFixed(0)}°`).join(" · ") || "—";
   const rows = [
     [zh ? "觀測地點" : "Observing site", plan.site.name],
     [zh ? "日期與時間" : "Date and time", time],
@@ -119,6 +121,7 @@ export function printablePhotographyPlanHtml(plan: PhotographyPlanExport, locale
     [zh ? "建議器材" : "Recommended equipment", plan.planning?.recommendedEquipment ?? `${plan.camera.sensor}, ${plan.camera.focalLengthMm} mm`],
     [zh ? "月球照明" : "Moon illumination", plan.planning ? `${plan.planning.moonIlluminationPercent}%` : "—"],
     [zh ? "天氣摘要" : "Weather summary", weather ? `${weather.cloudCoverPercent}% ${zh ? "雲量" : "cloud"} · ${weather.precipitationProbabilityPercent}% ${zh ? "降雨" : "rain"} · ${weather.windSpeedKmh.toFixed(1)} km/h` : (zh ? "無快取資料" : "No cached data")],
+    [zh ? "可見太陽系天體" : "Visible Solar System", visibleSolarSystem],
   ];
   return `<!doctype html><html lang="${locale}"><head><meta charset="utf-8"><title>AstroShot Plan</title><style>@page{size:A4;margin:16mm}body{font:14px system-ui,sans-serif;color:#14202b;max-width:760px;margin:auto}h1{font-size:25px;margin:0 0 4px}header p,small{color:#5c6975}table{width:100%;border-collapse:collapse;margin:24px 0}th,td{padding:10px;border-bottom:1px solid #dce2e7;text-align:left;vertical-align:top}th{width:34%;color:#52606c}section{break-inside:avoid;padding:14px;background:#f4f7f9;border-radius:10px}ul{padding-left:20px}@media print{button{display:none}}</style></head><body><header><h1>AstroShot</h1><p>${zh ? "觀測與拍攝計畫" : "Observing and photography plan"}</p></header><table>${rows.map(([label, value]) => `<tr><th>${escapeHtml(label)}</th><td>${escapeHtml(value)}</td></tr>`).join("")}</table><section><strong>${zh ? "資料限制" : "Limitations"}</strong><ul>${plan.limitations.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></section><p><small>${zh ? "本文件由瀏覽器在本機產生，不包含原始照片。" : "Generated locally in the browser. The original photo is not included."}</small></p><script>addEventListener("load",()=>setTimeout(()=>print(),100))<\/script></body></html>`;
 }

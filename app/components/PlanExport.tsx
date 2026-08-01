@@ -8,6 +8,7 @@ import type { PhotoAlignment } from "../simulation/photo-alignment";
 import type { PhotoPreviewSettings } from "../simulation/photo-preview";
 import type { ObservingWeather } from "../simulation/weather";
 import { calculateMoonPosition } from "../simulation/moon";
+import { isEphemerisTimestampSupported, solarSystemPosition, type SolarSystemBodyId } from "../simulation/solar-system-ephemeris";
 import { buildPhotographyPlanExport, buildPhotographyPlanShareUrl, externalAiHandoffPrompt, printablePhotographyPlanHtml } from "../simulation/plan-export";
 import type { ImportedPhoto } from "./PhotoImport";
 
@@ -35,6 +36,11 @@ export function PlanExport({ photo, alignment, camera, preview, site, simulation
     const timestamp = simulationTimeRef.current || Date.now();
     const moon = calculateMoonPosition(timestamp);
     const weather = cachedWeather(site);
+    const solarBodies: SolarSystemBodyId[] = ["moon", "mercury", "venus", "mars", "jupiter", "saturn"];
+    const solarSystem = isEphemerisTimestampSupported(timestamp) ? solarBodies.map((body) => {
+      const position = solarSystemPosition(body, timestamp, { latitude: site.latitude, longitude: site.longitude, elevationMeters: site.elevationMeters ?? 0 });
+      return { body, azimuthDegrees: position.topocentricHorizontalAirless.azimuthDegrees, elevationDegrees: position.topocentricHorizontalAirless.elevationDegrees, illuminationPercent: Math.round(position.illuminationFraction * 100), visualMagnitude: position.visualMagnitude };
+    }) : undefined;
     return buildPhotographyPlanExport({
       simulationTime: new Date(timestamp).toISOString(),
       site: { name: site.name[locale], latitude: site.latitude, longitude: site.longitude, elevationMeters: site.elevationMeters ?? null },
@@ -43,10 +49,11 @@ export function PlanExport({ photo, alignment, camera, preview, site, simulation
       confirmedCapture: photo ? alignment : null,
       preview,
       planning: {
-        moonIlluminationPercent: Math.round(moon.illuminatedFraction * 100),
+        moonIlluminationPercent: solarSystem?.find((body) => body.body === "moon")?.illuminationPercent ?? Math.round(moon.illuminatedFraction * 100),
         moonAgeDays: Number(moon.ageDays.toFixed(1)),
         weather: weather ? { fetchedAt: weather.fetchedAt, cloudCoverPercent: weather.cloudCoverPercent, precipitationProbabilityPercent: weather.precipitationProbabilityPercent, humidityPercent: weather.humidityPercent, windSpeedKmh: weather.windSpeedKmh } : null,
         recommendedEquipment: `${camera.sensor} · ${camera.focalLengthMm} mm · ${camera.orientation}`,
+        solarSystem,
       },
     });
   };

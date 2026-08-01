@@ -32,6 +32,10 @@
     "2026-Jan-01 12:00, ,m, 113.055445235, 21.990351270, 76.648351802, 26.178881233, 99.97197",
     "2026-Jan-01 12:00, ,m, 357.407169911, -3.583349026, 243.511044162, 37.551613893, 99.75029"
   ],
+  "eventRows": [
+    { "body": "moon", "rise": "2026-01-01T06:50:00.000Z", "transit": "2026-01-01T14:04:00.000Z", "set": "2026-01-01T21:21:00.000Z", "raw": ["2026-Jan-01 06:50,*,r", "2026-Jan-01 14:04, ,t", "2026-Jan-01 21:21,A,s"] },
+    { "body": "jupiter", "rise": "2026-01-01T09:55:00.000Z", "transit": "2026-01-01T16:41:00.000Z", "set": "2026-01-01T23:26:00.000Z", "raw": ["2026-Jan-01 09:55,N,r", "2026-Jan-01 16:41, ,t", "2026-Jan-01 23:26,*,s"] }
+  ],
   "rows": [
     { "body": "moon", "targetId": 301, "rightAscensionDegrees": 72.738732034, "declinationDegrees": 27.514483786, "azimuthDegrees": 78.083464638, "elevationDegrees": 63.034089095, "illuminationPercent": 94.64091 },
     { "body": "mercury", "targetId": 199, "rightAscensionDegrees": 269.358095196, "declinationDegrees": -24.061892894, "azimuthDegrees": 261.084881159, "elevationDegrees": -47.781009614, "illuminationPercent": 95.14638 },

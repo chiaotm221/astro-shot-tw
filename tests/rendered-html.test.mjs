@@ -130,6 +130,17 @@ test("V7 topocentric positions pass the first JPL Horizons fixture", async () =>
     assert.ok(Math.abs(actual.topocentricHorizontalAirless.elevationDegrees - expected.elevationDegrees) <= (expected.body === "moon" ? 0.15 : 0.1), `${expected.body} elevation error`);
     assert.ok(Math.abs(actual.illuminationFraction * 100 - expected.illuminationPercent) <= 2, `${expected.body} illumination error`);
   }
+  const intervalStart = Date.UTC(2026, 0, 1);
+  const intervalEnd = Date.UTC(2026, 0, 2);
+  for (const expected of fixture.eventRows) {
+    const actual = solarSystemEvents(expected.body, intervalStart, intervalEnd, observer);
+    const toleranceMinutes = expected.body === "moon" ? 10 : 5;
+    for (const key of ["rise", "transit", "set"]) {
+      assert.notEqual(actual[key], null, `${expected.body} ${key} missing`);
+      const errorMinutes = Math.abs(actual[key] - Date.parse(expected[key])) / 60000;
+      assert.ok(errorMinutes <= toleranceMinutes, `${expected.body} ${key} error ${errorMinutes} minutes`);
+    }
+  }
 });
 
 test("Milky Way planner returns bounded coordinates and planning windows", () => {
