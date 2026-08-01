@@ -1,3 +1,20 @@
+# V6.1
+
+## Added
+
+- Offline-data readiness panel for the application shell and star catalog
+- Manual offline-data download, refresh, and AstroShot-scoped removal actions
+- Browser storage usage and last-prepared-time reporting when supported
+- User-controlled application update prompt for waiting service workers
+- Partial-download and unsupported-browser feedback in English and Traditional
+  Chinese
+
+## Changed
+
+- New service-worker versions wait for explicit user action before replacing an
+  active version
+- Offline refresh retries missing resources and reports individual failures
+
 # V6.0
 
 ## Added

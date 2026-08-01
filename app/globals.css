@@ -726,6 +726,28 @@ button {
 .weather-conditions > small { color: var(--glass-muted); font-size: 8px; line-height: 1.45; }
 .weather-conditions a { color: var(--glass-foreground); }
 
+.offline-data-panel { display: grid; gap: 10px; margin: 0 -10px; padding: 8px 15px 12px; }
+.offline-data-panel p { margin: 0; color: var(--glass-muted); font-size: 9px; line-height: 1.5; }
+.offline-readiness { display: flex; align-items: center; gap: 9px; padding: 10px; border: 1px solid rgba(245, 247, 255, 0.1); border-radius: 12px; background: rgba(245, 247, 255, 0.04); }
+.offline-readiness i { width: 9px; height: 9px; flex: 0 0 auto; border-radius: 50%; }
+.offline-readiness.ready i { background: #88e0ad; box-shadow: 0 0 10px rgba(136, 224, 173, 0.55); }
+.offline-readiness.incomplete i { background: #f1cc82; box-shadow: 0 0 10px rgba(241, 204, 130, 0.45); }
+.offline-readiness div { display: grid; gap: 2px; }
+.offline-readiness strong { font-size: 11px; font-weight: 600; }
+.offline-readiness span { color: var(--glass-muted); font-size: 8px; }
+.offline-data-panel dl { display: grid; gap: 1px; margin: 0; overflow: hidden; border: 1px solid rgba(245, 247, 255, 0.09); border-radius: 12px; background: rgba(245, 247, 255, 0.09); }
+.offline-data-panel dl div { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 9px; background: rgba(13, 18, 32, 0.56); }
+.offline-data-panel dt { color: var(--glass-muted); font-size: 8px; }
+.offline-data-panel dd { margin: 0; font-size: 9px; font-variant-numeric: tabular-nums; text-align: right; }
+.offline-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.offline-data-panel button { min-height: 34px; padding: 0 9px; border: 1px solid rgba(245, 247, 255, 0.14); border-radius: 999px; background: rgba(245, 247, 255, 0.08); color: var(--glass-foreground); font: inherit; font-size: 8px; cursor: pointer; }
+.offline-data-panel button:hover { background: rgba(245, 247, 255, 0.14); }
+.offline-data-panel button:disabled { cursor: not-allowed; opacity: 0.45; }
+.offline-data-panel button.danger { color: #f2b4ae; }
+.offline-update { display: grid; gap: 7px; padding: 9px; border-radius: 10px; background: rgba(136, 224, 173, 0.08); color: #a8ebc2; font-size: 9px; }
+.offline-message { padding: 7px 9px; border-radius: 8px; background: rgba(136, 224, 173, 0.07); color: #a8ebc2 !important; }
+.offline-data-panel > small { color: var(--glass-muted); font-size: 8px; line-height: 1.5; }
+
 .light-pollution-panel { display: grid; gap: 11px; margin: 0 -10px; padding: 8px 15px 12px; }
 .light-pollution-panel > p { margin: 0; color: var(--glass-muted); font-size: 10px; line-height: 1.5; }
 .light-pollution-panel header { display: flex; align-items: stretch; gap: 7px; }

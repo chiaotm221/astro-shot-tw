@@ -25,6 +25,7 @@ import { PhotoImport, type ImportedPhoto } from "./components/PhotoImport";
 import { AlignedPhotoOverlay, PhotoAlignmentControls } from "./components/PhotoAlignment";
 import { PhotoSkyOverlay, PhotoSkyPreviewControls } from "./components/PhotoSkyPreview";
 import { PlanExport } from "./components/PlanExport";
+import { OfflineDataPanel } from "./components/OfflineDataPanel";
 import { TonightRecommendations } from "./components/TonightRecommendations";
 import { LiquidGlassMenu } from "./LiquidGlassMenu";
 import {
@@ -1909,6 +1910,16 @@ function SettingsPanel({
         </summary>
         <div className="section-content">
           <WeatherConditions latitude={settings.latitude} longitude={selectedSite.longitude} locale={locale} />
+        </div>
+      </details>
+
+      <details className="section">
+        <summary className="section-toggle">
+          <span>{locale === "zh-TW" ? "離線資料與更新" : "Offline Data & Updates"}</span>
+          <span className="section-chevron" aria-hidden="true" />
+        </summary>
+        <div className="section-content">
+          <OfflineDataPanel locale={locale} />
         </div>
       </details>
 

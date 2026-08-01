@@ -141,10 +141,60 @@ Planned sequence:
 - V5.3 — Star, Milky Way, and star-trail preview over the imported photo.
 - V5.4 — Photography-plan export and separately consented external AI workflow.
 
-### V6.x
+### V6.0 — Installable PWA and Offline Foundation
 
-- Installable PWA and carefully scoped offline support.
-- Cached core assets, star data, and clearly labeled stale external data.
+Status: Phase 1 implemented and covered by static-export tests. Full installed-app,
+offline-browser, update-cycle, and storage-pressure verification remains pending.
+
+- Installable web app metadata for desktop and mobile browsers.
+- A scoped service worker that caches the application shell, star catalog,
+  Milky Way texture, icons, and same-origin runtime assets.
+- Offline access to bundled observing sites and browser-local astronomy
+  calculations.
+- A visible offline state and explicit live-versus-cached weather labels with
+  the age of the last successful update.
+- Support for root deployments and configured static-export base paths.
+
+Detailed status and acceptance criteria: `docs/PLAN/V6.0.md`.
+
+### V6.1 — Offline Data and Update Management
+
+Status: Phase 1 implemented, pending installed-app, real offline-browser,
+storage-pressure, and service-worker replacement verification.
+
+- Let users inspect, refresh, and remove downloaded offline data.
+- Show service-worker update availability and apply an update after explicit
+  user action.
+- Report cache readiness, last refresh time, approximate storage use, and
+  partial-download failures.
+- Keep external forecast data optional and visibly stale when offline.
+- Add installed-app and network-disconnection browser tests.
+
+Detailed scope: `docs/PLAN/V6.1.md`.
+
+### V7.0 — Validated Solar-System Ephemerides
+
+Status: planned after V6.1.
+
+- Add validated positions for the Moon and major visible planets.
+- Complete Moon and planet coverage in recommendations, search, and object
+  information.
+- Provide rise, transit, and set events from one shared calculation layer.
+- Compare representative results against an authoritative reference and
+  publish the supported accuracy and date range.
+
+Detailed scope: `docs/PLAN/V7.0.md`.
+
+## Deferred Follow-Up
+
+- Complete PDF and shareable-link photography-plan exports.
+- Expand Taiwan observing sites with sourced eastern-island and offshore-island
+  data.
+- Replace site-level light-pollution estimates with versioned, attributable
+  coordinate sampling.
+- Validate photo alignment with real fixtures and broaden EXIF coverage.
+- Establish visual-regression, frame-rate, and memory-allocation baselines
+  before restructuring the renderer.
 
 ## Technical Direction
 

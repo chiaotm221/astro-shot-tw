@@ -1,4 +1,4 @@
-const VERSION = "astroshot-v6.0-1";
+const VERSION = "astroshot-v6.1-1";
 const CORE_CACHE = `${VERSION}-core`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const scopeUrl = new URL(self.registration.scope);
@@ -16,7 +16,6 @@ const CORE_ASSETS = [
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CORE_CACHE).then(async (cache) => {
     await Promise.allSettled(CORE_ASSETS.map((asset) => cache.add(asset)));
-    await self.skipWaiting();
   }));
 });
 
@@ -56,4 +55,32 @@ self.addEventListener("fetch", (event) => {
     return;
   }
   event.respondWith(cacheFirst(request));
+});
+
+async function cacheOfflineAssets(refresh) {
+  const cache = await caches.open(CORE_CACHE);
+  let cached = 0;
+  let failed = 0;
+  await Promise.all(CORE_ASSETS.map(async (asset) => {
+    try {
+      if (!refresh && await cache.match(asset)) { cached += 1; return; }
+      const response = await fetch(asset, { cache: "reload" });
+      if (!response.ok) throw new Error("Offline asset request failed");
+      await cache.put(asset, response);
+      cached += 1;
+    } catch { failed += 1; }
+  }));
+  return { ok: failed === 0, cached, failed };
+}
+
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") {
+    self.skipWaiting();
+    return;
+  }
+  if (event.data?.type === "CACHE_OFFLINE") {
+    event.waitUntil(cacheOfflineAssets(Boolean(event.data.refresh)).then((result) => {
+      event.ports[0]?.postMessage(result);
+    }));
+  }
 });

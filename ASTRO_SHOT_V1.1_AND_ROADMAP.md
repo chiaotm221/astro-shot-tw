@@ -656,6 +656,11 @@ app/SkySimulator.tsx
 
 ### V6.0 — PWA 與離線模式
 
+Status: Phase 1 implemented. The installable manifest, base-path-aware service
+worker, core asset and star-catalog caching, offline status, and cached-weather
+labels are complete. Installed-app and real offline-browser verification remain
+pending. See `docs/PLAN/V6.0.md`.
+
 目標：在山區網路不穩時仍可使用基本功能。
 
 建議內容：
@@ -668,6 +673,20 @@ app/SkySimulator.tsx
 - 區分即時資料與離線快取資料
 
 不建議在早期版本加入複雜 service worker，應等核心功能穩定後再進行。
+
+### V6.1 — Offline Data and Update Management
+
+Status: Phase 1 implemented. Cache readiness, refresh and removal actions,
+service-worker update prompts, and optional storage reporting are complete.
+Installed-app and real offline-browser tests remain pending. See
+`docs/PLAN/V6.1.md`.
+
+### V7.0 — Validated Solar-System Ephemerides
+
+Planned after V6.1. Add authoritative validation for Moon and visible-planet
+positions and rise/transit/set events, then use one shared result across
+recommendations, search, information cards, and camera planning. See
+`docs/PLAN/V7.0.md`.
 
 ## 10.3 技術重構路線
 

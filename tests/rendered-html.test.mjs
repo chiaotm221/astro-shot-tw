@@ -250,6 +250,10 @@ test("static export includes installable and offline PWA assets", async () => {
   assert.match(serviceWorker, /data\/stars\.json/);
   assert.match(serviceWorker, /request\.mode === "navigate"/);
   assert.match(serviceWorker, /caches\.match/);
+  assert.match(serviceWorker, /CACHE_OFFLINE/);
+  assert.match(serviceWorker, /SKIP_WAITING/);
+  assert.match(serviceWorker, /astroshot-v6\.1/);
+  assert.doesNotMatch(serviceWorker, /install[\s\S]{0,350}self\.skipWaiting\(\)/);
 });
 
 test("static export renders the AstroShot shell and controls", async () => {
@@ -288,6 +292,10 @@ test("static export renders the AstroShot shell and controls", async () => {
   assert.match(html, /aria-label="Switch to Chinese"/);
   assert.doesNotMatch(html, /github-link|github\.com\/CatsJuice\/astro-shot/);
   assert.match(html, /Add custom location/);
+  assert.match(html, /Offline Data &amp; Updates/);
+  assert.match(html, /Download incomplete/);
+  assert.match(html, /Download offline data/);
+  assert.match(html, /Remove offline data/);
   assert.match(html, /Use current location/);
   assert.match(html, /Tonight(?:'|&#x27;)s Sky/);
   assert.doesNotMatch(html, />LIVE</);
