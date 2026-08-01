@@ -253,6 +253,9 @@ test("static export includes installable and offline PWA assets", async () => {
   assert.match(serviceWorker, /CACHE_OFFLINE/);
   assert.match(serviceWorker, /SKIP_WAITING/);
   assert.match(serviceWorker, /astroshot-v6\.1/);
+  assert.match(serviceWorker, /__offline-ready__/);
+  assert.match(serviceWorker, /html\.matchAll/);
+  assert.match(serviceWorker, /(?:src\|href)/);
   assert.doesNotMatch(serviceWorker, /install[\s\S]{0,350}self\.skipWaiting\(\)/);
 });
 

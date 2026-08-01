@@ -3,6 +3,7 @@ const CORE_CACHE = `${VERSION}-core`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const scopeUrl = new URL(self.registration.scope);
 const scoped = (path) => new URL(path.replace(/^\//, ""), scopeUrl).href;
+const READY_MARKER = scoped("./__offline-ready__");
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -14,9 +15,7 @@ const CORE_ASSETS = [
 ].map(scoped);
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CORE_CACHE).then(async (cache) => {
-    await Promise.allSettled(CORE_ASSETS.map((asset) => cache.add(asset)));
-  }));
+  event.waitUntil(cacheOfflineAssets(false));
 });
 
 self.addEventListener("activate", (event) => {
@@ -61,7 +60,7 @@ async function cacheOfflineAssets(refresh) {
   const cache = await caches.open(CORE_CACHE);
   let cached = 0;
   let failed = 0;
-  await Promise.all(CORE_ASSETS.map(async (asset) => {
+  const cacheAssets = async (assets) => Promise.all(assets.map(async (asset) => {
     try {
       if (!refresh && await cache.match(asset)) { cached += 1; return; }
       const response = await fetch(asset, { cache: "reload" });
@@ -70,6 +69,25 @@ async function cacheOfflineAssets(refresh) {
       cached += 1;
     } catch { failed += 1; }
   }));
+  await cacheAssets(CORE_ASSETS);
+
+  try {
+    const entry = await cache.match(scoped("./index.html")) || await cache.match(scoped("./"));
+    if (!entry) throw new Error("Application entry point is unavailable");
+    const html = await entry.text();
+    const discovered = new Set();
+    for (const match of html.matchAll(/(?:src|href)=["']([^"'#]+)["']/gi)) {
+      const url = new URL(match[1], scopeUrl);
+      if (url.origin === scopeUrl.origin && url.pathname.startsWith(scopeUrl.pathname)) discovered.add(url.href);
+    }
+    await cacheAssets([...discovered]);
+  } catch { failed += 1; }
+
+  if (failed === 0) {
+    await cache.put(READY_MARKER, new Response(JSON.stringify({ version: VERSION, cachedAt: Date.now() }), { headers: { "content-type": "application/json" } }));
+  } else {
+    await cache.delete(READY_MARKER);
+  }
   return { ok: failed === 0, cached, failed };
 }
 

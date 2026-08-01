@@ -14,6 +14,8 @@
 - New service-worker versions wait for explicit user action before replacing an
   active version
 - Offline refresh retries missing resources and reports individual failures
+- Offline readiness now requires the exported page's discovered hashed scripts
+  and styles, not only the entry point and data files
 
 # V6.0
 

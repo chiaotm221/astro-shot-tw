@@ -6,6 +6,7 @@ import { withBasePath } from "../site-path";
 
 const CACHE_PREFIX = "astroshot-";
 const REFRESHED_AT_KEY = "astro-shot-offline-refreshed-at";
+const READY_MARKER = "/__offline-ready__";
 const REQUIRED_ASSETS = ["/", "/index.html", "/manifest.webmanifest", "/data/stars.json", "/textures/eso-milky-way-panorama-4096.jpg"] as const;
 
 type OfflineSnapshot = {
@@ -29,16 +30,17 @@ function formatBytes(bytes: number, locale: Locale) {
 async function inspectOfflineData(): Promise<OfflineSnapshot> {
   if (!("serviceWorker" in navigator) || !("caches" in window)) return { ...EMPTY_SNAPSHOT, supported: false };
   const matches = await Promise.all(REQUIRED_ASSETS.map((path) => caches.match(withBasePath(path))));
+  const readyMarker = await caches.match(withBasePath(READY_MARKER));
   const registration = await navigator.serviceWorker.getRegistration(withBasePath("/"));
   const estimate = navigator.storage?.estimate ? await navigator.storage.estimate() : {};
   const storedTime = window.localStorage.getItem(REFRESHED_AT_KEY);
   const refreshedAt = storedTime ? Number(storedTime) : null;
   return {
     supported: true,
-    ready: matches.every(Boolean),
+    ready: Boolean(readyMarker) && matches.every(Boolean),
     starDataReady: Boolean(matches[REQUIRED_ASSETS.indexOf("/data/stars.json")]),
-    cachedAssets: matches.filter(Boolean).length,
-    requiredAssets: matches.length,
+    cachedAssets: matches.filter(Boolean).length + (readyMarker ? 1 : 0),
+    requiredAssets: matches.length + 1,
     usage: estimate.usage ?? null,
     refreshedAt: Number.isFinite(refreshedAt) ? refreshedAt : null,
     updateWaiting: Boolean(registration?.waiting),
