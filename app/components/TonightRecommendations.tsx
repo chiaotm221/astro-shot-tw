@@ -2,11 +2,15 @@
 
 import { useEffect, useMemo, useState, type RefObject } from "react";
 import type { Locale } from "../i18n/types";
-import { RECOMMENDATION_OBJECTS } from "../simulation/celestial-objects";
+import { RECOMMENDATION_OBJECTS, SOLAR_SYSTEM_OBJECTS } from "../simulation/celestial-objects";
 import { recommendTonight, type ObjectVisibility } from "../simulation/visibility";
+import { isEphemerisTimestampSupported, solarSystemPosition, type SolarSystemBodyId } from "../simulation/solar-system-ephemeris";
 
 type TonightRecommendationsProps = {
   latitude: number;
+  longitude: number;
+  elevationMeters: number;
+  simulationTimeRef: RefObject<number>;
   siderealRef: RefObject<number>;
   locale: Locale;
 };
@@ -65,27 +69,34 @@ function equipmentFor(entry: ObjectVisibility, locale: Locale) {
 
 export function TonightRecommendations({
   latitude,
+  longitude,
+  elevationMeters,
+  simulationTimeRef,
   siderealRef,
   locale,
 }: TonightRecommendationsProps) {
   const [siderealAngle, setSiderealAngle] = useState(0);
+  const [timestamp, setTimestamp] = useState(0);
   const copy = COPY[locale];
 
   useEffect(() => {
-    const updateSiderealAngle = () => setSiderealAngle(siderealRef.current ?? 0);
+    const updateSiderealAngle = () => { setSiderealAngle(siderealRef.current ?? 0); setTimestamp(simulationTimeRef.current || Date.now()); };
     updateSiderealAngle();
     const timer = window.setInterval(updateSiderealAngle, 30000);
     return () => window.clearInterval(timer);
-  }, [siderealRef]);
+  }, [siderealRef, simulationTimeRef]);
 
   const recommendations = useMemo(
     () =>
       recommendTonight(
-        RECOMMENDATION_OBJECTS,
+        isEphemerisTimestampSupported(timestamp) ? [...RECOMMENDATION_OBJECTS, ...SOLAR_SYSTEM_OBJECTS.map((object) => {
+          const position = solarSystemPosition(object.id as SolarSystemBodyId, timestamp, { latitude, longitude, elevationMeters });
+          return { ...object, rightAscension: position.apparentEquatorialOfDate.rightAscensionRadians, declination: position.apparentEquatorialOfDate.declinationRadians, magnitude: position.visualMagnitude };
+        })] : RECOMMENDATION_OBJECTS,
         latitude,
         siderealAngle,
       ),
-    [latitude, siderealAngle],
+    [elevationMeters, latitude, longitude, siderealAngle, timestamp],
   );
 
   const focusObject = (entry: ObjectVisibility) => {

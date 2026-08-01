@@ -690,11 +690,11 @@ dialog verification remain pending. See `docs/PLAN/V6.2.md`.
 
 ### V7.0 — Validated Solar-System Ephemerides
 
-Reference and accuracy design complete. The contract now fixes JPL Horizons as
-the acceptance oracle, USNO event definitions as a secondary cross-check, a
-2020–2040 supported range, coordinate and refraction semantics, a fixture
-matrix, and separate Moon/planet error budgets. Implementation remains next.
-See `docs/PLAN/V7.0.md`.
+Phase 1 implemented. JPL Horizons remains the acceptance oracle for the
+2020–2040 contract; the shared offline API, dynamic Moon/planet search and
+recommendations, information-card events, and first six-body fixture are now
+complete. The full fixture matrix and renderer integration remain. See
+`docs/PLAN/V7.0.md`.
 
 ## 10.3 技術重構路線
 

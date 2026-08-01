@@ -1,4 +1,4 @@
-# V7.0 Planning
+# V7.0 Phase 1
 
 ## Added
 
@@ -8,6 +8,11 @@
 - Per-body angular, illumination, and event-time error budgets
 - A 2020–2040 validation range, fixture matrix, provenance requirements, and
   dependency decision gate
+- A pinned, zero-dependency Astronomy Engine 2.1.19 calculation layer
+- Dynamic Moon, Mercury, Venus, Mars, Jupiter, and Saturn positions in search
+  and Tonight's Sky
+- Daily rise, transit, and set events in solar-system information cards
+- The first provenance-bearing six-body JPL Horizons observer fixture
 
 # V6.2
 

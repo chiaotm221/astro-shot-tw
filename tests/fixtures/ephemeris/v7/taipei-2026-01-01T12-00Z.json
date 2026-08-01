@@ -1,0 +1,43 @@
+{
+  "schema": "astro-shot/jpl-horizons-observer-fixture",
+  "version": 1,
+  "retrievedAt": "2026-08-01T06:45:46Z",
+  "source": "NASA/JPL Horizons API 1.2",
+  "sourceDocumentation": "https://ssd-api.jpl.nasa.gov/doc/horizons.html",
+  "referenceEphemeris": "DE441",
+  "observer": {
+    "name": "Taipei",
+    "longitudeDegreesEast": 121.5654,
+    "latitudeDegreesNorth": 25.033,
+    "elevationMeters": 10
+  },
+  "timestamp": "2026-01-01T12:00:00.000Z",
+  "canonicalParameters": {
+    "EPHEM_TYPE": "OBSERVER",
+    "CENTER": "coord@399",
+    "COORD_TYPE": "GEODETIC",
+    "SITE_COORD": "121.5654,25.0330,0.010",
+    "TIME_TYPE": "UT",
+    "REF_SYSTEM": "ICRF",
+    "ANG_FORMAT": "DEG",
+    "APPARENT": "AIRLESS",
+    "EXTRA_PREC": "YES",
+    "QUANTITIES": "2,4,10"
+  },
+  "rawCsvRows": [
+    "2026-Jan-01 12:00, ,m, 72.738732034, 27.514483786, 78.083464638, 63.034089095, 94.64091",
+    "2026-Jan-01 12:00, ,m, 269.358095196, -24.061892894, 261.084881159, -47.781009614, 95.14638",
+    "2026-Jan-01 12:00, ,m, 280.741492827, -23.596114917, 258.558389946, -37.525818201, 99.97456",
+    "2026-Jan-01 12:00, ,m, 284.295573834, -23.686240842, 257.432419037, -34.398872765, 99.98286",
+    "2026-Jan-01 12:00, ,m, 113.055445235, 21.990351270, 76.648351802, 26.178881233, 99.97197",
+    "2026-Jan-01 12:00, ,m, 357.407169911, -3.583349026, 243.511044162, 37.551613893, 99.75029"
+  ],
+  "rows": [
+    { "body": "moon", "targetId": 301, "rightAscensionDegrees": 72.738732034, "declinationDegrees": 27.514483786, "azimuthDegrees": 78.083464638, "elevationDegrees": 63.034089095, "illuminationPercent": 94.64091 },
+    { "body": "mercury", "targetId": 199, "rightAscensionDegrees": 269.358095196, "declinationDegrees": -24.061892894, "azimuthDegrees": 261.084881159, "elevationDegrees": -47.781009614, "illuminationPercent": 95.14638 },
+    { "body": "venus", "targetId": 299, "rightAscensionDegrees": 280.741492827, "declinationDegrees": -23.596114917, "azimuthDegrees": 258.558389946, "elevationDegrees": -37.525818201, "illuminationPercent": 99.97456 },
+    { "body": "mars", "targetId": 499, "rightAscensionDegrees": 284.295573834, "declinationDegrees": -23.686240842, "azimuthDegrees": 257.432419037, "elevationDegrees": -34.398872765, "illuminationPercent": 99.98286 },
+    { "body": "jupiter", "targetId": 599, "rightAscensionDegrees": 113.055445235, "declinationDegrees": 21.990351270, "azimuthDegrees": 76.648351802, "elevationDegrees": 26.178881233, "illuminationPercent": 99.97197 },
+    { "body": "saturn", "targetId": 699, "rightAscensionDegrees": 357.407169911, "declinationDegrees": -3.583349026, "azimuthDegrees": 243.511044162, "elevationDegrees": 37.551613893, "illuminationPercent": 99.75029 }
+  ]
+}

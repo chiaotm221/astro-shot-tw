@@ -72,6 +72,11 @@ import {
   parsePhotographyPlanShareUrl,
   printablePhotographyPlanHtml,
 } from "../app/simulation/plan-export.ts";
+import {
+  isEphemerisTimestampSupported,
+  solarSystemEvents,
+  solarSystemPosition,
+} from "../app/simulation/solar-system-ephemeris.ts";
 
 test("object search normalizes aliases and localized names", () => {
   const index = createObjectSearchIndex(CELESTIAL_OBJECTS);
@@ -89,6 +94,42 @@ test("moon calculations preserve phase and event invariants", () => {
   const events = findMoonRiseAndSet(knownNewMoon, 23.5, 121);
   assert.ok(events.rise === null || events.rise > knownNewMoon);
   assert.ok(events.set === null || events.set > knownNewMoon);
+});
+
+test("V7 ephemerides provide bounded topocentric positions and daily events", () => {
+  const observer = { latitude: 25.033, longitude: 121.5654, elevationMeters: 10 };
+  const timestamp = Date.UTC(2026, 0, 1, 12);
+  for (const body of ["moon", "mercury", "venus", "mars", "jupiter", "saturn"]) {
+    const position = solarSystemPosition(body, timestamp, observer);
+    assert.ok(position.apparentEquatorialOfDate.rightAscensionRadians >= 0 && position.apparentEquatorialOfDate.rightAscensionRadians < Math.PI * 2);
+    assert.ok(position.apparentEquatorialOfDate.declinationRadians >= -Math.PI / 2 && position.apparentEquatorialOfDate.declinationRadians <= Math.PI / 2);
+    assert.ok(position.topocentricHorizontalAirless.azimuthDegrees >= 0 && position.topocentricHorizontalAirless.azimuthDegrees < 360);
+    assert.ok(position.topocentricHorizontalAirless.elevationDegrees >= -90 && position.topocentricHorizontalAirless.elevationDegrees <= 90);
+    assert.ok(position.illuminationFraction >= 0 && position.illuminationFraction <= 1);
+  }
+  const events = solarSystemEvents("moon", Date.UTC(2026, 0, 1), Date.UTC(2026, 0, 2), observer);
+  for (const event of [events.rise, events.transit, events.set]) assert.ok(event === null || (event >= events.intervalStart && event < events.intervalEnd));
+  assert.equal(isEphemerisTimestampSupported(Date.UTC(2040, 11, 31)), true);
+  assert.equal(isEphemerisTimestampSupported(Date.UTC(2041, 0, 1)), false);
+  assert.throws(() => solarSystemPosition("mars", Date.UTC(2050, 0, 1), observer), /2020 through 2040/);
+});
+
+test("V7 topocentric positions pass the first JPL Horizons fixture", async () => {
+  const fixture = JSON.parse(await readFile(new URL("./fixtures/ephemeris/v7/taipei-2026-01-01T12-00Z.json", import.meta.url), "utf8"));
+  const timestamp = Date.parse(fixture.timestamp);
+  const observer = { latitude: fixture.observer.latitudeDegreesNorth, longitude: fixture.observer.longitudeDegreesEast, elevationMeters: fixture.observer.elevationMeters };
+  const shortestAngle = (actual, expected) => Math.abs(((actual - expected + 540) % 360) - 180);
+  for (const expected of fixture.rows) {
+    const actual = solarSystemPosition(expected.body, timestamp, observer);
+    const raDegrees = actual.apparentEquatorialOfDate.rightAscensionRadians * 180 / Math.PI;
+    const decDegrees = actual.apparentEquatorialOfDate.declinationRadians * 180 / Math.PI;
+    const skySeparation = Math.hypot(shortestAngle(raDegrees, expected.rightAscensionDegrees) * Math.cos(expected.declinationDegrees * Math.PI / 180), decDegrees - expected.declinationDegrees);
+    const positionTolerance = expected.body === "moon" ? 0.1 : 0.05;
+    assert.ok(skySeparation <= positionTolerance, `${expected.body} sky error ${skySeparation}°`);
+    assert.ok(shortestAngle(actual.topocentricHorizontalAirless.azimuthDegrees, expected.azimuthDegrees) <= (expected.body === "moon" ? 0.2 : 0.1), `${expected.body} azimuth error`);
+    assert.ok(Math.abs(actual.topocentricHorizontalAirless.elevationDegrees - expected.elevationDegrees) <= (expected.body === "moon" ? 0.15 : 0.1), `${expected.body} elevation error`);
+    assert.ok(Math.abs(actual.illuminationFraction * 100 - expected.illuminationPercent) <= 2, `${expected.body} illumination error`);
+  }
 });
 
 test("Milky Way planner returns bounded coordinates and planning windows", () => {

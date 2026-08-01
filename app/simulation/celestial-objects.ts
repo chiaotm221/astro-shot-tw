@@ -18,6 +18,12 @@ export type CelestialObject = {
 const equatorial = (degrees: number) => degrees * DEG;
 
 export const CELESTIAL_OBJECTS: readonly CelestialObject[] = [
+  { id: "moon", name: { "zh-TW": "月球", en: "Moon" }, aliases: ["Luna", "月亮"], kind: "planet", rightAscension: 0, declination: 0, magnitude: -12.7, description: { "zh-TW": "地球唯一的天然衛星。位置由 V7.0 離線星曆動態計算。", en: "Earth's natural satellite. Its position is calculated dynamically by the offline V7.0 ephemeris." } },
+  { id: "mercury", name: { "zh-TW": "水星", en: "Mercury" }, kind: "planet", rightAscension: 0, declination: 0, magnitude: -0.4 },
+  { id: "venus", name: { "zh-TW": "金星", en: "Venus" }, aliases: ["晨星", "昏星"], kind: "planet", rightAscension: 0, declination: 0, magnitude: -4.1 },
+  { id: "mars", name: { "zh-TW": "火星", en: "Mars" }, kind: "planet", rightAscension: 0, declination: 0, magnitude: -1 },
+  { id: "jupiter", name: { "zh-TW": "木星", en: "Jupiter" }, kind: "planet", rightAscension: 0, declination: 0, magnitude: -2.2 },
+  { id: "saturn", name: { "zh-TW": "土星", en: "Saturn" }, kind: "planet", rightAscension: 0, declination: 0, magnitude: 0.7 },
   { id: "sirius", name: { "zh-TW": "天狼星", en: "Sirius" }, aliases: ["Alpha Canis Majoris"], kind: "star", rightAscension: equatorial(101.2872), declination: equatorial(-16.7161), magnitude: -1.46, distanceLightYears: 8.6, constellation: { "zh-TW": "大犬座", en: "Canis Major" }, description: { "zh-TW": "夜空中最明亮的恆星。", en: "The brightest star in Earth's night sky." } },
   { id: "vega", name: { "zh-TW": "織女星", en: "Vega" }, aliases: ["Alpha Lyrae"], kind: "star", rightAscension: equatorial(279.2347), declination: equatorial(38.7837), magnitude: 0.03, distanceLightYears: 25, constellation: { "zh-TW": "天琴座", en: "Lyra" } },
   { id: "altair", name: { "zh-TW": "牛郎星", en: "Altair" }, aliases: ["河鼓二", "Alpha Aquilae"], kind: "star", rightAscension: equatorial(297.6958), declination: equatorial(8.8683), magnitude: 0.77, distanceLightYears: 16.7, constellation: { "zh-TW": "天鷹座", en: "Aquila" } },
@@ -34,4 +40,8 @@ export const CELESTIAL_OBJECTS: readonly CelestialObject[] = [
 
 export const RECOMMENDATION_OBJECTS = CELESTIAL_OBJECTS.filter(
   (object) => object.kind === "star" || object.kind === "deep-sky",
+);
+
+export const SOLAR_SYSTEM_OBJECTS = CELESTIAL_OBJECTS.filter(
+  (object) => object.kind === "planet",
 );

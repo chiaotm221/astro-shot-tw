@@ -1980,7 +1980,7 @@ function SettingsPanel({
           <span className="section-chevron" aria-hidden="true" />
         </summary>
         <div className="section-content">
-          <ObjectSearch locale={locale} />
+          <ObjectSearch locale={locale} latitude={settings.latitude} longitude={selectedSite.longitude} elevationMeters={selectedSite.elevationMeters ?? 0} simulationTimeRef={simulationTimeRef} />
         </div>
       </details>
 
@@ -2070,6 +2070,9 @@ function SettingsPanel({
         <div className="section-content">
           <TonightRecommendations
             latitude={settings.latitude}
+            longitude={selectedSite.longitude}
+            elevationMeters={selectedSite.elevationMeters ?? 0}
+            simulationTimeRef={simulationTimeRef}
             siderealRef={siderealRef}
             locale={locale}
           />
@@ -3369,7 +3372,10 @@ export function SkySimulator() {
         <ObjectInfoCard
           object={selectedObject}
           latitude={settings.latitude}
+          longitude={selectedSite.longitude}
+          elevationMeters={selectedSite.elevationMeters ?? 0}
           siderealRef={siderealRef}
+          simulationTimeRef={simulationTimeRef}
           locale={locale}
           onClose={() => setSelectedObject(null)}
         />

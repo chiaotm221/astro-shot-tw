@@ -186,8 +186,9 @@ Detailed scope: `docs/PLAN/V6.2.md`.
 
 ### V7.0 — Validated Solar-System Ephemerides
 
-Status: reference source, coordinate contract, 2020–2040 supported range,
-fixture matrix, and error budgets designed; implementation planned after V6.2.
+Status: Phase 1 implemented with a shared offline ephemeris API, pinned engine,
+dynamic search/recommendations, information-card events, and a six-body JPL
+fixture. The full 2020–2040 fixture matrix and renderer integration remain.
 
 - Add validated positions for the Moon and major visible planets.
 - Complete Moon and planet coverage in recommendations, search, and object
