@@ -3,14 +3,17 @@ export type PhotoExif = {
   model: string | null;
   orientation: number | null;
   capturedAt: string | null;
+  capturedAtOffset: string | null;
   focalLengthMm: number | null;
   focalLength35Mm: number | null;
   latitude: number | null;
   longitude: number | null;
   altitudeMeters: number | null;
+  headingDegrees: number | null;
+  headingReference: "true" | "magnetic" | null;
 };
 
-const EMPTY_EXIF: PhotoExif = { make: null, model: null, orientation: null, capturedAt: null, focalLengthMm: null, focalLength35Mm: null, latitude: null, longitude: null, altitudeMeters: null };
+const EMPTY_EXIF: PhotoExif = { make: null, model: null, orientation: null, capturedAt: null, capturedAtOffset: null, focalLengthMm: null, focalLength35Mm: null, latitude: null, longitude: null, altitudeMeters: null, headingDegrees: null, headingReference: null };
 
 type Entry = { type: number; count: number; valueOffset: number; inlineOffset: number };
 
@@ -89,10 +92,25 @@ function readTiff(view: DataView, base: number, end: number): PhotoExif {
     return (degrees + minutes / 60 + seconds / 3600) * (ref === "S" || ref === "W" ? -1 : 1);
   };
   const altitude = number(gps.get(0x0006));
+  const heading = number(gps.get(0x0011));
+  const headingRef = text(gps.get(0x0010));
+  const latitude = coordinate(0x0002, 0x0001);
+  const longitude = coordinate(0x0004, 0x0003);
+  const focalLength = number(exif.get(0x920a));
+  const focalLength35 = number(exif.get(0xa405));
+  const orientation = number(root.get(0x0112));
+  const normalizedOffset = text(exif.get(0x9011));
   return {
-    make: text(root.get(0x010f)), model: text(root.get(0x0110)), orientation: number(root.get(0x0112)),
-    capturedAt: text(exif.get(0x9003)) ?? text(root.get(0x0132)), focalLengthMm: number(exif.get(0x920a)), focalLength35Mm: number(exif.get(0xa405)),
-    latitude: coordinate(0x0002, 0x0001), longitude: coordinate(0x0004, 0x0003), altitudeMeters: altitude === null ? null : altitude * (number(gps.get(0x0005)) === 1 ? -1 : 1),
+    make: text(root.get(0x010f)), model: text(root.get(0x0110)), orientation: orientation !== null && [1, 3, 6, 8].includes(orientation) ? orientation : null,
+    capturedAt: text(exif.get(0x9003)) ?? text(root.get(0x0132)),
+    capturedAtOffset: normalizedOffset && /^[+-](?:0\d|1\d|2[0-3]):[0-5]\d$/.test(normalizedOffset) ? normalizedOffset : null,
+    focalLengthMm: focalLength !== null && focalLength > 0 && focalLength <= 2000 ? focalLength : null,
+    focalLength35Mm: focalLength35 !== null && focalLength35 > 0 && focalLength35 <= 2000 ? focalLength35 : null,
+    latitude: latitude !== null && latitude >= -90 && latitude <= 90 ? latitude : null,
+    longitude: longitude !== null && longitude >= -180 && longitude <= 180 ? longitude : null,
+    altitudeMeters: altitude === null || altitude > 20000 ? null : altitude * (number(gps.get(0x0005)) === 1 ? -1 : 1),
+    headingDegrees: heading === null ? null : ((heading % 360) + 360) % 360,
+    headingReference: headingRef === "T" ? "true" : headingRef === "M" ? "magnetic" : null,
   };
 }
 

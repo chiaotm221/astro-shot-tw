@@ -62,9 +62,16 @@ import {
 import { hasExifData, readJpegExif } from "../app/simulation/exif.ts";
 import {
   alignmentFromExif,
+  captureTimestampFromAlignment,
   exifFieldMatches,
 } from "../app/simulation/photo-alignment.ts";
 import { trailSampleIntervalSeconds } from "../app/simulation/photo-preview.ts";
+import {
+  SKY_EXPORT_SIZES,
+  luminousAlpha,
+  makeLuminousPixelsTransparent,
+  skyExportFilename,
+} from "../app/simulation/sky-image-export.mjs";
 import {
   buildPhotographyPlanShareUrl,
   buildPhotographyPlanExport,
@@ -84,6 +91,24 @@ test("object search normalizes aliases and localized names", () => {
   assert.equal(searchCelestialObjects("天狼", 8, index)[0]?.id, "sirius");
   assert.equal(searchCelestialObjects("m 42", 8, index)[0]?.id, "orion-nebula");
   assert.equal(searchCelestialObjects("BIG-DIPPER", 8, index)[0]?.id, "ursa-major");
+});
+
+test("V7.1 sky material export has stable sizes, names, and alpha extraction", () => {
+  assert.deepEqual(SKY_EXPORT_SIZES.map(({ width, height }) => [width, height]), [
+    [1920, 1080],
+    [2560, 1440],
+    [3840, 2160],
+  ]);
+  assert.equal(
+    skyExportFilename("star-trails", true, Date.UTC(2026, 0, 2, 3, 4, 5), 3840, 2160),
+    "astro-shot-star-trails-transparent-3840x2160-2026-01-02T03-04-05-000Z.png",
+  );
+  assert.equal(luminousAlpha(12, 20, 36), 0);
+  assert.equal(luminousAlpha(255, 240, 230), 255);
+  const pixels = new Uint8ClampedArray([8, 12, 20, 255, 255, 240, 230, 255]);
+  makeLuminousPixelsTransparent(pixels);
+  assert.equal(pixels[3], 0);
+  assert.equal(pixels[7], 255);
 });
 
 test("moon calculations preserve phase and event invariants", () => {
@@ -228,12 +253,79 @@ test("local JPEG EXIF parser reads a bounded little-endian orientation tag", () 
   assert.ok(hasExifData(exif));
 });
 
+test("local JPEG EXIF parser supports big-endian TIFF and rejects invalid orientation", () => {
+  const create = (orientation) => {
+    const bytes = new Uint8Array(40);
+    const view = new DataView(bytes.buffer);
+    view.setUint16(0, 0xffd8);
+    view.setUint16(2, 0xffe1);
+    view.setUint16(4, 34);
+    bytes.set([0x45, 0x78, 0x69, 0x66, 0, 0], 6);
+    bytes.set([0x4d, 0x4d], 12);
+    view.setUint16(14, 42);
+    view.setUint32(16, 8);
+    view.setUint16(20, 1);
+    view.setUint16(22, 0x0112);
+    view.setUint16(24, 3);
+    view.setUint32(26, 1);
+    view.setUint16(30, orientation);
+    view.setUint32(34, 0);
+    view.setUint16(38, 0xffd9);
+    return readJpegExif(bytes.buffer);
+  };
+  assert.equal(create(3).orientation, 3);
+  assert.equal(create(9).orientation, null);
+  assert.deepEqual(readJpegExif(new Uint8Array([0xff, 0xd8, 0xff]).buffer), {
+    make: null, model: null, orientation: null, capturedAt: null,
+    capturedAtOffset: null, focalLengthMm: null, focalLength35Mm: null,
+    latitude: null, longitude: null, altitudeMeters: null,
+    headingDegrees: null, headingReference: null,
+  });
+});
+
+test("local JPEG EXIF parser reads GPS image direction and north reference", () => {
+  const bytes = new Uint8Array(128);
+  const view = new DataView(bytes.buffer);
+  view.setUint16(0, 0xffd8);
+  view.setUint16(2, 0xffe1);
+  view.setUint16(4, 122);
+  bytes.set([0x45, 0x78, 0x69, 0x66, 0, 0], 6);
+  bytes.set([0x49, 0x49], 12);
+  view.setUint16(14, 42, true);
+  view.setUint32(16, 8, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 0x8825, true);
+  view.setUint16(24, 4, true);
+  view.setUint32(26, 1, true);
+  view.setUint32(30, 26, true);
+  view.setUint32(34, 0, true);
+  view.setUint16(38, 2, true);
+  view.setUint16(40, 0x0010, true);
+  view.setUint16(42, 2, true);
+  view.setUint32(44, 2, true);
+  bytes[48] = 0x54;
+  view.setUint16(52, 0x0011, true);
+  view.setUint16(54, 5, true);
+  view.setUint32(56, 1, true);
+  view.setUint32(60, 90, true);
+  view.setUint32(64, 0, true);
+  view.setUint32(102, 275, true);
+  view.setUint32(106, 2, true);
+  const exif = readJpegExif(bytes.buffer);
+  assert.equal(exif.headingDegrees, 137.5);
+  assert.equal(exif.headingReference, "true");
+});
+
 test("photo alignment preserves EXIF provenance after manual correction", () => {
-  const exif = { make: null, model: null, orientation: 6, capturedAt: "2026:07:15 21:30:00", focalLengthMm: 24, focalLength35Mm: null, latitude: 23.5, longitude: 121, altitudeMeters: 1000 };
+  const exif = { make: null, model: null, orientation: 6, capturedAt: "2026:07:15 21:30:00", capturedAtOffset: "+08:00", focalLengthMm: 24, focalLength35Mm: null, latitude: 23.5, longitude: 121, altitudeMeters: 1000, headingDegrees: 137.5, headingReference: "true" };
   const alignment = alignmentFromExif(exif);
   assert.equal(alignment.capturedAt, "2026-07-15T21:30:00");
+  assert.equal(alignment.azimuthDegrees, 137.5);
+  assert.ok(exifFieldMatches(alignment, exif, "azimuthDegrees"));
   assert.ok(exifFieldMatches(alignment, exif, "latitude"));
   assert.ok(!exifFieldMatches({ ...alignment, latitude: 23.6 }, exif, "latitude"));
+  assert.equal(captureTimestampFromAlignment(alignment), Date.UTC(2026, 6, 15, 13, 30));
+  assert.equal(captureTimestampFromAlignment({ capturedAt: "invalid", capturedAtOffset: null }), null);
 });
 
 test("star-trail sampling stays bounded as preview duration changes", () => {

@@ -1,3 +1,51 @@
+# V7.3 Planning
+
+## Added
+
+- A live mobile pointing design covering absolute orientation, iOS permission,
+  Safari compass fallback, screen rotation, calibration, and smoothing
+
+## Changed
+
+- Deferred all live-sensor implementation until the V7.2 EXIF import and
+  application gate is complete
+
+# V7.2 Phase 1
+
+## Added
+
+- Standard JPEG EXIF `GPSImgDirection` and direction-reference parsing
+- Automatic camera-azimuth initialization from photo metadata
+- EXIF/manual provenance indicators for camera direction
+- A photo-metadata-driven simulation plan with explicit IMU limitations
+
+## Changed
+
+- Replaced corrupted localized strings in photo import and alignment controls
+- Clarified that camera tilt remains manual when no standardized pose metadata
+  is available
+- Added validated `OffsetTimeOriginal` handling for absolute capture instants
+- Added bounds checks for GPS, altitude, focal length, orientation, and heading
+- Applied confirmed focal length and frame orientation to the camera simulator
+- Added big-endian TIFF, malformed input, orientation, direction, and timezone
+  regression coverage
+
+# V7.1 Phase 1
+
+## Added
+
+- Standalone star, Milky Way, and accumulated star-trail PNG material export
+- Transparent and opaque output modes for external AI compositing workflows
+- Full HD, QHD, and 4K output choices with deterministic file names
+- Background trail accumulation that does not require an imported photograph
+- Automated output-size, file-name, and alpha-extraction tests
+
+## Changed
+
+- Reframed the photo preview controls as reusable standalone sky-material
+  controls
+- Clarified that AstroShot does not composite, upload, or invoke an AI service
+
 # V7.0 Phase 2
 
 ## Added

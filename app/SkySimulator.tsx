@@ -71,7 +71,7 @@ import {
 import { isEphemerisTimestampSupported, solarSystemPosition, type SolarSystemBodyId } from "./simulation/solar-system-ephemeris";
 import { CONSTELLATION_FIGURES } from "./simulation/constellations";
 import { DEFAULT_PHOTOGRAPHY_PLAN, type PhotographyPlan } from "./simulation/photography";
-import { alignmentFromExif, DEFAULT_PHOTO_ALIGNMENT, type PhotoAlignment } from "./simulation/photo-alignment";
+import { alignmentFromExif, captureTimestampFromAlignment, DEFAULT_PHOTO_ALIGNMENT, type PhotoAlignment } from "./simulation/photo-alignment";
 import { DEFAULT_PHOTO_PREVIEW, type PhotoPreviewSettings } from "./simulation/photo-preview";
 import {
   localDateInputValue,
@@ -1788,6 +1788,7 @@ function SettingsPanel({
   photoPreview,
   setPhotoPreview,
   sourceCanvasRef,
+  trailCanvasRef,
 }: {
   settings: Settings;
   setSettings: Dispatch<SetStateAction<Settings>>;
@@ -1812,6 +1813,7 @@ function SettingsPanel({
   photoPreview: PhotoPreviewSettings;
   setPhotoPreview: Dispatch<SetStateAction<PhotoPreviewSettings>>;
   sourceCanvasRef: RefObject<HTMLCanvasElement | null>;
+  trailCanvasRef: RefObject<HTMLCanvasElement | null>;
 }) {
   const copy = UI_COPY[locale];
   const update = useCallback(
@@ -1851,7 +1853,7 @@ function SettingsPanel({
           <span className="section-chevron" aria-hidden="true" />
         </summary>
         <div className="section-content">
-          <PlanExport photo={importedPhoto} alignment={photoAlignment} camera={photographyPlan} preview={photoPreview} site={selectedSite} simulationTimeRef={simulationTimeRef} sourceCanvasRef={sourceCanvasRef} locale={locale} />
+          <PlanExport photo={importedPhoto} alignment={photoAlignment} camera={photographyPlan} preview={photoPreview} site={selectedSite} simulationTimeRef={simulationTimeRef} sourceCanvasRef={sourceCanvasRef} trailCanvasRef={trailCanvasRef} locale={locale} />
         </div>
       </details>
 
@@ -2251,6 +2253,7 @@ function SettingsPanel({
 
 export function SkySimulator() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const trailCanvasRef = useRef<HTMLCanvasElement>(null);
   const settingsRef = useRef(INITIAL_SETTINGS);
   const localeRef = useRef<Locale>(defaultLocale);
   const observingLongitudeRef = useRef(DEFAULT_OBSERVING_SITE.longitude);
@@ -2306,8 +2309,14 @@ export function SkySimulator() {
     };
     setCustomSites((current) => [captureSite, ...current.filter((site) => site.id !== captureSite.id)]);
     applyObservingSite(captureSite);
-    const captureTime = new Date(alignment.capturedAt).getTime();
-    if (Number.isFinite(captureTime)) simulationTimeRef.current = captureTime;
+    const captureTime = captureTimestampFromAlignment(alignment);
+    if (captureTime !== null) simulationTimeRef.current = captureTime;
+    setPhotographyPlan((current) => ({
+      ...current,
+      focalLengthMm: alignment.focalLengthMm === null ? current.focalLengthMm : clamp(alignment.focalLengthMm, 8, 200),
+      orientation: alignment.orientation === 6 || alignment.orientation === 8 ? "portrait" : "landscape",
+      cameraTiltDegrees: alignment.tiltDegrees,
+    }));
     window.dispatchEvent(new CustomEvent("sky:set-view", { detail: { azimuthDegrees: alignment.azimuthDegrees, altitudeDegrees: alignment.tiltDegrees } }));
   }, [applyObservingSite]);
 
@@ -3397,7 +3406,7 @@ export function SkySimulator() {
       <div className="vignette" />
 
       {importedPhoto && <AlignedPhotoOverlay photo={importedPhoto} alignment={photoAlignment} />}
-      {importedPhoto && photoPreview.enabled && <PhotoSkyOverlay sourceCanvasRef={canvasRef} simulationTimeRef={simulationTimeRef} settings={photoPreview} />}
+      <PhotoSkyOverlay sourceCanvasRef={canvasRef} simulationTimeRef={simulationTimeRef} settings={photoPreview} outputCanvasRef={trailCanvasRef} visible={importedPhoto !== null && photoPreview.enabled} />
 
       <CameraSystem
         sourceCanvasRef={canvasRef}
@@ -3475,6 +3484,7 @@ export function SkySimulator() {
             photoPreview={photoPreview}
             setPhotoPreview={setPhotoPreview}
             sourceCanvasRef={canvasRef}
+            trailCanvasRef={trailCanvasRef}
           />
         </div>
       </LiquidGlassMenu>
