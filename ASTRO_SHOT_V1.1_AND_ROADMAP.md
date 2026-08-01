@@ -681,12 +681,20 @@ service-worker update prompts, and optional storage reporting are complete.
 Installed-app and real offline-browser tests remain pending. See
 `docs/PLAN/V6.1.md`.
 
+### V6.2 — Field Plan Export and Sharing
+
+Status: Phase 1 implemented. Localized print/PDF output, Moon and cached-weather
+summaries, Web Share with clipboard fallback, privacy-reduced URL-fragment
+links, and a shared-plan receiver are complete. Mobile share-sheet and print
+dialog verification remain pending. See `docs/PLAN/V6.2.md`.
+
 ### V7.0 — Validated Solar-System Ephemerides
 
-Planned after V6.1. Add authoritative validation for Moon and visible-planet
-positions and rise/transit/set events, then use one shared result across
-recommendations, search, information cards, and camera planning. See
-`docs/PLAN/V7.0.md`.
+Reference and accuracy design complete. The contract now fixes JPL Horizons as
+the acceptance oracle, USNO event definitions as a secondary cross-check, a
+2020–2040 supported range, coordinate and refraction semantics, a fixture
+matrix, and separate Moon/planet error budgets. Implementation remains next.
+See `docs/PLAN/V7.0.md`.
 
 ## 10.3 技術重構路線
 

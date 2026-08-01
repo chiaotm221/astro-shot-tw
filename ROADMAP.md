@@ -172,9 +172,22 @@ storage-pressure, and service-worker replacement verification.
 
 Detailed scope: `docs/PLAN/V6.1.md`.
 
+### V6.2 — Field Plan Export and Sharing
+
+Status: Phase 1 implemented, pending mobile share-sheet, clipboard-permission,
+and browser print/PDF verification.
+
+- Complete the field plan with Moon, cached-weather, and equipment summaries.
+- Add localized print output for browser PDF saving.
+- Share a privacy-reduced plan through Web Share or a URL-fragment link.
+- Keep JSON, PNG, print, and shared values derived from one plan model.
+
+Detailed scope: `docs/PLAN/V6.2.md`.
+
 ### V7.0 — Validated Solar-System Ephemerides
 
-Status: planned after V6.1.
+Status: reference source, coordinate contract, 2020–2040 supported range,
+fixture matrix, and error budgets designed; implementation planned after V6.2.
 
 - Add validated positions for the Moon and major visible planets.
 - Complete Moon and planet coverage in recommendations, search, and object
@@ -187,7 +200,6 @@ Detailed scope: `docs/PLAN/V7.0.md`.
 
 ## Deferred Follow-Up
 
-- Complete PDF and shareable-link photography-plan exports.
 - Expand Taiwan observing sites with sourced eastern-island and offshore-island
   data.
 - Replace site-level light-pollution estimates with versioned, attributable

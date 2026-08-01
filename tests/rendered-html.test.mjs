@@ -66,8 +66,11 @@ import {
 } from "../app/simulation/photo-alignment.ts";
 import { trailSampleIntervalSeconds } from "../app/simulation/photo-preview.ts";
 import {
+  buildPhotographyPlanShareUrl,
   buildPhotographyPlanExport,
   externalAiHandoffPrompt,
+  parsePhotographyPlanShareUrl,
+  printablePhotographyPlanHtml,
 } from "../app/simulation/plan-export.ts";
 
 test("object search normalizes aliases and localized names", () => {
@@ -200,6 +203,21 @@ test("photography-plan export is versioned and excludes image payloads", () => {
   assert.equal(plan.version, 1);
   assert.doesNotMatch(JSON.stringify(plan), /data:image|blob:/);
   assert.match(externalAiHandoffPrompt(plan), /immutable foreground/);
+
+  plan.originalExif = { make: "Private camera" };
+  plan.confirmedCapture = { latitude: 1, longitude: 2 };
+  const shareUrl = buildPhotographyPlanShareUrl(plan, "https://example.test/astro-shot/");
+  const shared = parsePhotographyPlanShareUrl(shareUrl);
+  assert.equal(shared?.site.name, "Test");
+  assert.equal(shared?.originalExif, null);
+  assert.equal(shared?.confirmedCapture, null);
+  assert.ok(shareUrl.startsWith("https://example.test/astro-shot/#plan="));
+  assert.throws(() => parsePhotographyPlanShareUrl("https://example.test/#plan=eyJzY2hlbWEiOiJiYWQifQ"), /Unsupported/);
+
+  const printable = printablePhotographyPlanHtml({ ...plan, site: { ...plan.site, name: "<script>alert(1)</script>" } }, "en");
+  assert.match(printable, /Print|photography plan/i);
+  assert.doesNotMatch(printable, /<script>alert\(1\)<\/script>/);
+  assert.match(printable, /&lt;script&gt;/);
 });
 
 async function render() {
@@ -299,6 +317,8 @@ test("static export renders the AstroShot shell and controls", async () => {
   assert.match(html, /Download incomplete/);
   assert.match(html, /Download offline data/);
   assert.match(html, /Remove offline data/);
+  assert.match(html, /Print \/ Save PDF/);
+  assert.match(html, /Share or copy link/);
   assert.match(html, /Use current location/);
   assert.match(html, /Tonight(?:'|&#x27;)s Sky/);
   assert.doesNotMatch(html, />LIVE</);

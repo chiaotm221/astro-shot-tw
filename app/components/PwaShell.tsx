@@ -5,6 +5,7 @@ import { resolveInitialLocale } from "../locale-preference.mjs";
 import { defaultLocale } from "../site-path";
 import type { Locale } from "../i18n/types";
 import { PwaRuntime } from "./PwaRuntime";
+import { SharedPlanReceiver } from "./SharedPlanReceiver";
 
 export function PwaShell() {
   const [locale, setLocale] = useState<Locale>(defaultLocale);
@@ -12,5 +13,5 @@ export function PwaShell() {
     const timer = window.setTimeout(() => setLocale(resolveInitialLocale(defaultLocale) as Locale), 0);
     return () => window.clearTimeout(timer);
   }, []);
-  return <PwaRuntime locale={locale} />;
+  return <><PwaRuntime locale={locale} /><SharedPlanReceiver locale={locale} /></>;
 }

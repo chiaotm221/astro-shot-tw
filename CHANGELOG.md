@@ -1,3 +1,29 @@
+# V7.0 Planning
+
+## Added
+
+- Normative JPL Horizons fixture configuration and USNO event-definition
+  cross-check policy
+- Explicit coordinate, time-scale, horizon, and refraction contracts
+- Per-body angular, illumination, and event-time error budgets
+- A 2020–2040 validation range, fixture matrix, provenance requirements, and
+  dependency decision gate
+
+# V6.2
+
+## Added
+
+- Localized field-plan print view for printing or browser PDF saving
+- Moon, cached-weather, and recommended-equipment planning summaries
+- Web Share support with clipboard fallback
+- URL-fragment plan links with Unicode-safe deterministic serialization
+- Printable-value escaping and privacy-reduced share-link tests
+
+## Changed
+
+- Shared plans exclude original EXIF and confirmed capture data
+- Replaced corrupted localized strings in the plan export panel
+
 # V6.1
 
 ## Added
