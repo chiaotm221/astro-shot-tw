@@ -67,6 +67,11 @@ import {
 } from "../app/simulation/photo-alignment.ts";
 import { trailSampleIntervalSeconds } from "../app/simulation/photo-preview.ts";
 import {
+  circularLerpDegrees,
+  normalizeHeadingDegrees,
+  orientationToView,
+} from "../app/simulation/device-pointing.mjs";
+import {
   SKY_EXPORT_SIZES,
   luminousAlpha,
   makeLuminousPixelsTransparent,
@@ -109,6 +114,21 @@ test("V7.1 sky material export has stable sizes, names, and alpha extraction", (
   makeLuminousPixelsTransparent(pixels);
   assert.equal(pixels[3], 0);
   assert.equal(pixels[7], 255);
+});
+
+test("V7.3 device orientation maps camera direction and smooths heading wrap", () => {
+  const northHorizon = orientationToView(0, 90, 0);
+  const eastHorizon = orientationToView(270, 90, 0);
+  const zenith = orientationToView(0, 180, 0);
+  assert.ok(northHorizon);
+  assert.ok(eastHorizon);
+  assert.equal(Math.round(northHorizon.azimuthDegrees), 0);
+  assert.ok(Math.abs(northHorizon.altitudeDegrees) < 1e-9);
+  assert.equal(Math.round(eastHorizon.azimuthDegrees), 90);
+  assert.ok(Math.abs(eastHorizon.altitudeDegrees) < 1e-9);
+  assert.equal(Math.round(zenith.altitudeDegrees), 90);
+  assert.equal(normalizeHeadingDegrees(-1), 359);
+  assert.ok(circularLerpDegrees(359, 1, 0.5) < 1 || circularLerpDegrees(359, 1, 0.5) > 359);
 });
 
 test("moon calculations preserve phase and event invariants", () => {
@@ -802,17 +822,6 @@ test("fixed sky inputs preserve east-west direction and recommendation filtering
   );
   assert.ok(recommendations.every((entry) => entry.status !== "not-tonight"));
   assert.ok(!recommendations.some((entry) => entry.object.id === "hidden"));
-});
-
-test("XHS build compiles with Chinese as its default locale", async () => {
-  const config = await readFile(
-    new URL("../vite.xhs.config.ts", import.meta.url),
-    "utf8",
-  );
-  assert.match(
-    config,
-    /"process\.env\.NEXT_PUBLIC_DEFAULT_LOCALE": JSON\.stringify\("zh-TW"\)/,
-  );
 });
 
 test("ships a real catalog and the temporal rendering systems", async () => {

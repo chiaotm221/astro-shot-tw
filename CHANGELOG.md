@@ -1,14 +1,20 @@
-# V7.3 Planning
+# V7.3 Phase 1
 
 ## Added
 
 - A live mobile pointing design covering absolute orientation, iOS permission,
   Safari compass fallback, screen rotation, calibration, and smoothing
+- A permission-aware phone sensor panel with live azimuth and tilt
+- Immediate sensor-to-renderer view updates with lock, resume, and stop controls
+- True-north, magnetic-north, compass-accuracy, relative-only, and no-data
+  status reporting
+- Wrap-safe heading smoothing and user calibration controls
+- Device-orientation conversion regression tests
 
-## Changed
+## Removed
 
-- Deferred all live-sensor implementation until the V7.2 EXIF import and
-  application gate is complete
+- The unused XHS-specific Vite entry, offline packager, bundled assets, runtime
+  branches, package script, documentation, and build test
 
 # V7.2 Phase 1
 

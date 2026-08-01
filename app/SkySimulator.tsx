@@ -25,6 +25,7 @@ import { PhotoImport, type ImportedPhoto } from "./components/PhotoImport";
 import { AlignedPhotoOverlay, PhotoAlignmentControls } from "./components/PhotoAlignment";
 import { PhotoSkyOverlay, PhotoSkyPreviewControls } from "./components/PhotoSkyPreview";
 import { PlanExport } from "./components/PlanExport";
+import { DevicePointingPanel } from "./components/DevicePointingPanel";
 import { OfflineDataPanel } from "./components/OfflineDataPanel";
 import { TonightRecommendations } from "./components/TonightRecommendations";
 import { LiquidGlassMenu } from "./LiquidGlassMenu";
@@ -40,8 +41,6 @@ import { createOpeningFireballCue } from "./opening-fireball.mjs";
 import { resolveInitialLocale } from "./locale-preference.mjs";
 import {
   defaultLocale,
-  getBundledXhsData,
-  isXhsBuild,
   withBasePath,
 } from "./site-path";
 import { UI_COPY } from "./i18n/translations";
@@ -1849,6 +1848,16 @@ function SettingsPanel({
 
       <details className="section">
         <summary className="section-toggle">
+          <span>{locale === "zh-TW" ? "手機感應器指向" : "Phone Sensor Pointing"}</span>
+          <span className="section-chevron" aria-hidden="true" />
+        </summary>
+        <div className="section-content">
+          <DevicePointingPanel locale={locale} />
+        </div>
+      </details>
+
+      <details className="section">
+        <summary className="section-toggle">
           <span>{locale === "zh-TW" ? "方案與預覽匯出" : "Plan & Preview Export"}</span>
           <span className="section-chevron" aria-hidden="true" />
         </summary>
@@ -2558,12 +2567,10 @@ export function SkySimulator() {
     resizeObserver.observe(canvas);
     resize();
 
-    const catalogPromise = isXhsBuild
-      ? Promise.resolve(getBundledXhsData<Catalog>("starCatalog"))
-      : fetch(withBasePath("/data/stars.json")).then((response) => {
-          if (!response.ok) throw new Error("Unable to load star catalogue");
-          return response.json() as Promise<Catalog>;
-        });
+    const catalogPromise = fetch(withBasePath("/data/stars.json")).then((response) => {
+      if (!response.ok) throw new Error("Unable to load star catalogue");
+      return response.json() as Promise<Catalog>;
+    });
 
     catalogPromise
       .then((catalog) => {
@@ -2678,9 +2685,17 @@ export function SkySimulator() {
       const toAzimuth = (detail.azimuthDegrees as number) * DEG;
       focusAnimation = { startedAt: performance.now() / 1000, fromAzimuth: view.azimuth, fromAltitude: view.altitude, toAzimuth, toAltitude: clamp((detail.altitudeDegrees as number) * DEG, -8 * DEG, 87 * DEG), label: "" };
     };
+    const setSensorView = (event: Event) => {
+      const detail = (event as CustomEvent<{ azimuthDegrees?: number; altitudeDegrees?: number }>).detail;
+      if (!Number.isFinite(detail?.azimuthDegrees) || !Number.isFinite(detail?.altitudeDegrees)) return;
+      focusAnimation = null;
+      view.azimuth = (detail.azimuthDegrees as number) * DEG;
+      view.altitude = clamp((detail.altitudeDegrees as number) * DEG, -8 * DEG, 87 * DEG);
+    };
     window.addEventListener("sky:meteor", summonMeteor);
     window.addEventListener("sky:focus-object", focusCelestialObject);
     window.addEventListener("sky:set-view", setSkyView);
+    window.addEventListener("sky:sensor-view", setSensorView);
 
     const pointerDown = (event: PointerEvent) => {
       if (interactionLockedRef.current) return;
@@ -3386,6 +3401,7 @@ export function SkySimulator() {
       window.removeEventListener("sky:meteor", summonMeteor);
       window.removeEventListener("sky:focus-object", focusCelestialObject);
       window.removeEventListener("sky:set-view", setSkyView);
+      window.removeEventListener("sky:sensor-view", setSensorView);
       canvas.removeEventListener("pointerdown", pointerDown);
       canvas.removeEventListener("pointermove", pointerMove);
       canvas.removeEventListener("pointerup", pointerUp);

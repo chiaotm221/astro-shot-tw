@@ -26,7 +26,7 @@ The local development server uses `http://localhost:3002`.
 - Do not add dependencies without a clear technical requirement.
 - Keep browser APIs out of server rendering paths.
 - Do not update React state from the animation loop.
-- Preserve Canvas, WebGL, camera, static-export, Cloudflare, and XHS behavior.
+- Preserve Canvas, WebGL, camera, static-export, and Cloudflare behavior.
 - Store disposable project artifacts under `tmp/`.
 - Update the relevant plan while requirements are evolving and update
   `CHANGELOG.md` only for completed user-visible changes.

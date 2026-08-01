@@ -13,7 +13,6 @@ import {
 import { flushSync } from "react-dom";
 import type { Locale } from "./i18n/types";
 import { pinchRatio, pointerDistance } from "./pinch-gesture.mjs";
-import { isXhsBuild } from "./site-path";
 
 export type CaptureMode = "video" | "photo" | "long-exposure";
 type CaptureKind = CaptureMode;
@@ -927,7 +926,6 @@ export function CameraSystem({
   };
 
   const downloadSelectedCapture = () => {
-    if (isXhsBuild) return;
     if (!selectedCapture) return;
     const anchor = document.createElement("a");
     anchor.href = selectedCapture.url;
@@ -1194,8 +1192,7 @@ export function CameraSystem({
                     aria-hidden={!moreOpen}
                     inert={!moreOpen}
                   >
-                    {!isXhsBuild && (
-                      <button
+                    <button
                         type="button"
                         role="menuitem"
                         onClick={downloadSelectedCapture}
@@ -1205,7 +1202,6 @@ export function CameraSystem({
                         </svg>
                         {copy.downloadOriginal}
                       </button>
-                    )}
                     <button
                       className="danger"
                       type="button"

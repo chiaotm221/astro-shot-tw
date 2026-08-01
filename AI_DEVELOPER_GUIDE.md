@@ -8,7 +8,7 @@ relevant roadmap or version plan; this guide defines the engineering workflow.
 
 AstroShot is an interactive sky and meteor simulator built with Next.js 16,
 React 19, and TypeScript. It uses the Next.js App Router and also supports Vite,
-vinext, Cloudflare, and XHS builds.
+vinext and Cloudflare builds.
 
 Important files:
 
@@ -46,7 +46,7 @@ The sky renderer combines Canvas 2D and WebGL. Changes must preserve:
 - the single `requestAnimationFrame` loop;
 - Canvas initialization, resize behavior, and cleanup;
 - the Milky Way WebGL renderer and its fallback behavior;
-- star catalogue loading for standard and XHS builds;
+- star catalogue loading for the standard build;
 - camera capture from the source canvas;
 - pointer, wheel, keyboard, and pinch interaction;
 - static export and Cloudflare compatibility.
@@ -143,7 +143,7 @@ Also verify when possible:
 - desktop and mobile interaction;
 - camera and long-exposure capture;
 - locale and localStorage restoration;
-- standard, Cloudflare, and XHS build compatibility;
+- standard and Cloudflare build compatibility;
 - stable visual output at fixed simulation inputs.
 
 If a command cannot run, report the exact environmental blocker. Never describe

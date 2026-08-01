@@ -78,7 +78,6 @@ client effect, preventing server/client markup differences.
 - `public/data/stars.json` contains the generated star catalogue.
 - `public/textures/` contains the Milky Way panorama.
 - `scripts/build-star-catalog.mjs` prepares catalogue data.
-- XHS builds bundle required runtime data and asset paths.
 
 External datasets and media must retain their license and attribution records.
 
@@ -87,7 +86,6 @@ External datasets and media must retain their license and attribution records.
 - Next.js development and static export.
 - GitHub Pages deployment from the static output.
 - Optional Sites/Cloudflare build through vinext.
-- XHS offline package through Vite.
 
 Changes must not assume a server-only runtime unless a version plan explicitly
 changes deployment architecture.

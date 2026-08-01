@@ -8,7 +8,6 @@
   "scripts": {
     "dev": "next dev --port 3002",
     "build": "next build",
-    "build:xhs": "vite build --config vite.xhs.config.ts && node scripts/package-xhs.mjs",
     "start": "node scripts/serve-static.mjs",
     "test": "npm run build && node --test tests/rendered-html.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next --ignore-pattern tmp",

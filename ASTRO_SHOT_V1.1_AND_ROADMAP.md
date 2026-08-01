@@ -14,7 +14,7 @@ V1.1 的目標是加入「台灣觀測地點選擇器」，讓使用者可以從
 - React：React 19
 - Language：TypeScript
 - Router：Next.js App Router
-- 其他建置支援：Vite / vinext、Cloudflare、XHS
+- 其他建置支援：Vite / vinext、Cloudflare
 - 主要頁面入口：`app/page.tsx`
 - 主要星空元件：`app/SkySimulator.tsx`
 - 天文投影輔助：`app/rendering-helpers.mjs`
